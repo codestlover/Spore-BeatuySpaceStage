@@ -20,17 +20,3 @@ Material of others, which the license above does not cover:
 - The compiled library contains Microsoft Detours, under the MIT license of Microsoft Corporation:
   licenses/Detours-MIT.md.
 
----
-
-Beatuy!SpaceStage — исходный код, скрипты сборки и инструментов, библиотека BeatuySpaceStage.dll, игровой пакет
-BeatuySpaceStage.package и сделанные для мода модели, эффекты, изображения и тексты — распространяется по лицензии
-Sheroll для некоммерческого использования, версия 1.0: licenses/Sheroll-NC-1.0.md.
-
-Кратко: можно играть в Spore с модом; читать, изменять и переписывать его код; использовать его код и ресурсы в своих
-работах и бесплатно делиться ими, указывая источник — «Based on Beatuy!SpaceStage by Sheroll s.r.o®» — в титрах и
-везде, где они публикуются. Добросовестное использование (fair use) свободно. Нельзя использовать мод, его код или
-ресурсы, изменённые или нет, в коммерческих целях. Решает текст лицензии.
-
-Чужие материалы, на которые лицензия не распространяется: данные самой Spore, из которых сделана часть файлов пакета
-(принадлежат Electronic Arts Inc.), и Microsoft Detours под лицензией MIT (licenses/Detours-MIT.md).
-

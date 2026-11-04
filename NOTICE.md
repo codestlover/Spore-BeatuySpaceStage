@@ -4,8 +4,8 @@ Copyright © 2026 Sheroll s.r.o® All rights reserved.
 
 Beatuy!SpaceStage is licensed under the Sheroll Non-Commercial License 1.0. This covers its source code, its build
 scripts, the compiled BeatuySpaceStage.dll, the game package BeatuySpaceStage.package and the models, effects,
-pictures and texts made for it. The summary and the list of material of others are in LICENSE. The full license text,
-in English with a Russian translation, is in licenses/Sheroll-NC-1.0.md. The English text decides.
+pictures and texts made for it. The summary and the list of material of others are in LICENSE. The full license text
+is in licenses/Sheroll-NC-1.0.md.
 
 Derived works name the source as "Based on Beatuy!SpaceStage by Sheroll s.r.o®" in their credits and wherever they
 are published. Sharing unchanged copies of the whole mod needs Sheroll's permission (§3.4 of the license).
