@@ -1,0 +1,36 @@
+
+Beatuy!SpaceStage
+Copyright © 2026 Sheroll s.r.o® All rights reserved.
+
+Beatuy!SpaceStage - its source code, its build and tool scripts, its compiled library BeatuySpaceStage.dll, its game
+package BeatuySpaceStage.package and the models, effects, pictures and texts made for it - is licensed under the
+Sheroll Non-Commercial License, version 1.0: licenses/Sheroll-NC-1.0.md.
+
+In short: you may play Spore with the mod; read, change and rewrite its code; and use its code and resources in your
+own works and share them free of charge, naming the source as "Based on Beatuy!SpaceStage by Sheroll s.r.o®" in
+their credits and wherever they are published. Fair use stays free. You may not use the mod, its code or its resources,
+changed or not, for any commercial purpose. The license text decides.
+
+Material of others, which the license above does not cover:
+
+- Spore is a game of Electronic Arts Inc. The mod is not made, approved or supported by Electronic Arts. Some files of
+  the package are made from data of Spore itself (the textures and the model layout of the glow generator, the game's
+  tool lists that the package extends, the escort's rally voice lines and the attack reticle that the package
+  recolours); that data belongs to Electronic Arts Inc.
+- The compiled library contains Microsoft Detours, under the MIT license of Microsoft Corporation:
+  licenses/Detours-MIT.md.
+
+---
+
+Beatuy!SpaceStage — исходный код, скрипты сборки и инструментов, библиотека BeatuySpaceStage.dll, игровой пакет
+BeatuySpaceStage.package и сделанные для мода модели, эффекты, изображения и тексты — распространяется по лицензии
+Sheroll для некоммерческого использования, версия 1.0: licenses/Sheroll-NC-1.0.md.
+
+Кратко: можно играть в Spore с модом; читать, изменять и переписывать его код; использовать его код и ресурсы в своих
+работах и бесплатно делиться ими, указывая источник — «Based on Beatuy!SpaceStage by Sheroll s.r.o®» — в титрах и
+везде, где они публикуются. Добросовестное использование (fair use) свободно. Нельзя использовать мод, его код или
+ресурсы, изменённые или нет, в коммерческих целях. Решает текст лицензии.
+
+Чужие материалы, на которые лицензия не распространяется: данные самой Spore, из которых сделана часть файлов пакета
+(принадлежат Electronic Arts Inc.), и Microsoft Detours под лицензией MIT (licenses/Detours-MIT.md).
+
