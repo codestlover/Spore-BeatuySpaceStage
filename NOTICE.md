@@ -1,5 +1,5 @@
 
-Beatuy!SpaceStage 1.0.0
+Beatuy!SpaceStage 1.0.1
 Copyright © 2026 Sheroll s.r.o® All rights reserved.
 
 Beatuy!SpaceStage is licensed under the Sheroll Non-Commercial License 1.0. This covers its source code, its build

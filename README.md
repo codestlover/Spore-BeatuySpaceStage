@@ -8,7 +8,7 @@ defend themselves, hold grudges and fight wars of their own, tribes throw spears
 open fire at once under a red sky, and a new colony tool tints a planet's atmosphere in any colour. Everything is built
 on the game's own systems: its behaviour trees, relation events, voice lines, effects and interface art.
 
-Current version: **1.0.0**. Download `BeatuySpaceStage.sporemod` from the [Releases](../../releases) page.
+Current version: **1.0.1**. Download `BeatuySpaceStage.sporemod` from the [Releases](../../releases) page.
 
 ## What it changes
 
@@ -226,7 +226,9 @@ orbit.
 | Saves | The colour is kept in the save, and the tinted atmosphere is shown in the star system view |
 
 **Alien generators.** Scientist, Shaman and Bard empires keep generators on 60 % of their colonies, some in colours of
-their own. The choice is fixed for each colony.
+their own. The choice is fixed for each colony. An alien generator belongs to the colony's owner: it wears the owner's
+colour on the planet, on its rollover and on the minimap, and an attack on it angers the owner as an attack on the colony
+does.
 
 ### Travel and escort safety
 
@@ -328,10 +330,10 @@ registers a post-init callback, and starts once the game is up.
 
 - **The map of the game.** Every address the mod uses is listed in one map (`src/game/map`), 193 entries in all.
   127 of them carry the bytes expected there, and those bytes are checked at start-up or when the hook is placed.
-- **Hooks.** The mod places 40 hooks: 23 virtual-table slots and 17 code detours (Microsoft Detours). It also makes two
-  byte-level changes to let the escort's rose take the mod's targets:
-  - one 4-byte jump patch;
-  - one behaviour-record swap.
+- **Hooks.** The mod places 42 hooks: 24 virtual-table slots and 18 code detours (Microsoft Detours). It also makes
+  three byte-level changes:
+  - one 4-byte jump patch and one behaviour-record swap let the escort's rose take the mod's targets;
+  - one redirected call gives a tool object's rollover its owner's colour.
 - **Features.** Each feature is a module run once per frame in a fixed order, after the space game mode's own update.
 
 | Game system | Hooks |
@@ -339,7 +341,7 @@ registers a post-init callback, and starts once the game is up.
 | Space game mode | Update, Exit and MouseDown slots; the system and planet cameras' mouse wheel |
 | Ship | Combatant TakeDamage, AddHostileUnit, IsInRange and SetTarget slots; the set-target-in-range-band call of the behaviour trees |
 | Space simulation | The space game simulator's Update; the player ship record's Write and Read |
-| Tools | The tool target check; FireTool; the place-object tool's Update; the area repair's and the Rally Call's WhileFiring |
+| Tools | The tool target check; FireTool; the place-object tool's Update; the area repair's and the Rally Call's WhileFiring; a placed tool object's minimap mark and model view; the tool object rollover's colour (a redirected call) |
 | Combat and flow | Base combatant TakeDamage; leaving the planet; the player ship destroyed; the reinforcement call |
 | Civilization | Relationship apply; vehicle AddOrder and AddOrderAt; vehicle combatant slots; city vehicle spawn; belief projectile update and launch; the voice queue |
 | Tribe | Spear projectile update; the panic and cower behaviour ticks |

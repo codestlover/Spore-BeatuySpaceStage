@@ -26,7 +26,8 @@ struct Settings {
     uint32_t claimedEvent = 0x147e3c98, claimedTable = 0x63bfe3fe, claimedText = 0x31;
     float hitPoints = 1000.0f;
     float fadeSeconds = 2.0f, shiftSeconds = 0.6f;
-    DWORD scanMilliseconds = 500, echoMilliseconds = 40;
+    DWORD scanMilliseconds = 500, echoMilliseconds = 40, answerMilliseconds = 1000;
+    float strikeWeight = 1.0f, destroyedWeight = 1.0f;
     LONG slopPixels = 6;
     int maximumGenerators = 16;
     std::array<map::identifiers::Archetype, 3> keepers = {map::identifiers::Archetype::Scientist,
@@ -49,6 +50,9 @@ public:
     bool tint(char* state, float color[3], float& level);
     [[nodiscard]] static const char16_t* localeText(uint32_t table, uint32_t identifier);
     [[nodiscard]] static std::optional<bool> placement(void* strategy, char* tool, bool show, const char16_t** failText);
+    [[nodiscard]] std::optional<generator::Color> alienColor(game::GameData object) const;
+    [[nodiscard]] game::ToolObject alienTarget(void* combatant, uint32_t politicalId) const;
+    void answerStrike(game::ToolObject target, bool wasStanding);
 
 private:
     struct Tracked {
@@ -80,9 +84,9 @@ private:
     game::Planet planet;
     std::array<Tracked, generator::settings.maximumGenerators> generators;
     int generatorCount = 0;
-    DWORD nextScan = 0, lastTick = 0;
+    DWORD nextScan = 0, lastTick = 0, nextAnswer = 0;
     Tinting tinting;
-    bool alienChecked = false;
+    bool alienChecked = false, placingAlien = false;
     Click lastClick;
 };
 }

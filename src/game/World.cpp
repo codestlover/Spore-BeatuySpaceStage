@@ -4,6 +4,7 @@
 
 module;
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstdint>
 #include <initializer_list>
@@ -335,6 +336,40 @@ bool hasPlanetObject(PlanetRecord record, uint32_t tool) {
 
 void placeToolObject(uint32_t tool, const Vector& at, float health) {
     planet::placeToolObject(tool, &at, health);
+}
+
+void markOnMinimap(void* minimap, GameData object, std::span<const float, 3> color) {
+    struct Mark {
+        uint32_t color = 0;
+        Vector at{};
+        uint32_t flags = 0x40000;
+        void* object = nullptr;
+        float size = 0.0f;
+        std::array<uint32_t, 2> reserved{};
+    };
+    static_assert(sizeof(Mark) == 0x24);
+    const Vector* at = object.body().position();
+    if (!minimap || !object || !at)
+        return;
+    const std::array<float, 4> rgba{color[0], color[1], color[2], 1.0f};
+    Mark mark{.color = planet::packColor(rgba.data()), .at = *at, .object = object.raw()};
+    object.addReference();
+    planet::unmarkOnMinimap(minimap, object.raw(), 1, 0);
+    planet::markOnMinimap(minimap, object.raw(), &mark, 0, 0);
+    object.release();
+}
+
+void showColonyMood(City city, float value, const Vector& at) {
+    if (city && std::isfinite(value) && value != 0.0f)
+        planet::colonyMood(city.raw(), value, &at);
+}
+
+void paintToolView(void* view, std::span<const float, 3> color) {
+    char* model = view ? callVirtual<char*>(view, 0x2c) : nullptr;
+    if (!model)
+        return;
+    for (size_t channel = 0; channel < color.size(); ++channel)
+        field<float>(model, uint32_t(0x4c + channel * 4)) = color[channel];
 }
 
 float standing(uint32_t who, uint32_t towards) {

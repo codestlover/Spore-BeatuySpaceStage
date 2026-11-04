@@ -5,6 +5,7 @@
 module;
 #include <cstdint>
 #include <optional>
+#include <span>
 
 export module beatuy.game.world;
 
@@ -107,6 +108,9 @@ Image atmosphereImage(map::identifiers::Atmosphere type);
 
 bool hasPlanetObject(PlanetRecord record, uint32_t tool);
 void placeToolObject(uint32_t tool, const Vector& at, float health);
+void markOnMinimap(void* minimap, GameData object, std::span<const float, 3> color);
+void paintToolView(void* view, std::span<const float, 3> color);
+void showColonyMood(City city, float value, const Vector& at);
 
 float standing(uint32_t who, uint32_t towards);
 bool atWar(uint32_t first, uint32_t second);

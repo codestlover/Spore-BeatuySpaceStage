@@ -192,7 +192,9 @@ void Generator::placeForAlien(game::PlanetRecord record) {
         game::Vector spot = game::ground(centre + (side * cosf(angle) + ahead * sinf(angle)) * reach);
         if (game::inWater(spot))
             continue;
+        placingAlien = true;
         game::placeToolObject(settings.tool, spot, settings.hitPoints);
+        placingAlien = false;
         game::RecordObject element = generator::element(record);
         uint32_t picks = generator::mix(identifier ^ 0x5bd1e995u);
         uint32_t code = generator::alienFlag;
@@ -227,6 +229,59 @@ void Generator::applyPick(uint32_t packedColor) {
     uint32_t code = (old & generator::alienFlag) | generator::pickedFlag | (packedColor & generator::colorMask);
     element.spare() = code;
     tinting.target = generator::unpackColor(packedColor & generator::colorMask);
+}
+
+std::optional<generator::Color> Generator::alienColor(game::GameData object) const {
+    const game::ToolObject tool(object ? object.cast(map::identifiers::Type::ToolObject) : nullptr);
+    if (!tool || tool.tool() != generator::settings.tool)
+        return std::nullopt;
+    const game::RecordObject element = generator::element(game::activeRecord());
+    if (!placingAlien && !(element && (element.spare() & generator::alienFlag)))
+        return std::nullopt;
+    if (generator::Color color; game::planetOwner().colour(color))
+        return color;
+    return std::nullopt;
+}
+
+game::ToolObject Generator::alienTarget(void* combatant, uint32_t politicalId) const {
+    if (!combatant || politicalId != game::playerPoliticalId())
+        return game::ToolObject();
+    const auto found = std::ranges::find_if(
+        followed(), [&](const Tracked& tracked) { return tracked.object.fighter().raw() == combatant; });
+    if (found == followed().end() || !alienColor(found->object))
+        return game::ToolObject();
+    return found->object;
+}
+
+void Generator::answerStrike(game::ToolObject target, bool wasStanding) {
+    const generator::Settings& settings = generator::settings;
+    const uint32_t owner = game::planetOwnerPoliticalId(), player = game::playerPoliticalId();
+    if (!target || owner == uint32_t(-1) || owner == player)
+        return;
+    const bool destroyed = wasStanding && !(target.fighter().health() > 0.0f);
+    const DWORD now = GetTickCount();
+    if (!destroyed && LONG(now - nextAnswer) < 0)
+        return;
+    nextAnswer = now + settings.answerMilliseconds;
+    using enum map::identifiers::Relation;
+    const float change = game::apply(owner, player, destroyed ? DestroyedBuilding : Attacked,
+                                     destroyed ? settings.destroyedWeight : settings.strikeWeight);
+    const game::Vector at = target.position();
+    game::City nearest;
+    float best = 0.0f;
+    for (game::City city : game::each<game::City>(map::civilization::cities)) {
+        const game::Vector* place = city && city.alive() && city.politicalId() == owner ? city.place().position()
+                                                                                       : nullptr;
+        if (!place)
+            continue;
+        const game::Vector offset = *place - at;
+        const float distance = game::dot(offset, offset);
+        if (!nearest || distance < best) {
+            nearest = city;
+            best = distance;
+        }
+    }
+    game::showColonyMood(nearest, change, at);
 }
 
 game::ToolObject Generator::hoveredGenerator() const {

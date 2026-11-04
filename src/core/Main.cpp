@@ -4,6 +4,8 @@
 
 #include <Windows.h>
 #include <algorithm>
+#include <array>
+#include <bit>
 #include <cstdint>
 #include <optional>
 
@@ -49,7 +51,12 @@ int __fastcall takeDamageHook(void* combatant, void*, float damage, uint32_t pol
         mod().civilization.onDamage(combatant, politicalId, attacker, damage, type);
         type = mod().civilization.damageType(combatant, attacker, type);
     }
-    return space::combatantTakeDamage.callOriginal(combatant, damage, politicalId, type, at, attacker);
+    const game::ToolObject struck = planet ? mod().generator.alienTarget(combatant, politicalId) : game::ToolObject();
+    const bool standing = struck && struck.fighter().health() > 0.0f;
+    const int result = space::combatantTakeDamage.callOriginal(combatant, damage, politicalId, type, at, attacker);
+    if (struck)
+        mod().generator.answerStrike(struck, standing);
+    return result;
 }
 
 void __fastcall leavePlanetHook(void* transition, void*, int argument) {
@@ -239,6 +246,44 @@ const char16_t* __fastcall localeTextHook(void* table, void*, uint32_t identifie
     return application::localeTableText.callOriginal(table, identifier);
 }
 
+void __cdecl markToolObjectHook(void* object, void* minimap) {
+    if (const auto color = object && minimap ? mod().generator.alienColor(game::GameData(object)) : std::nullopt) {
+        game::GameData(object).setPoliticalId(game::planetOwnerPoliticalId());
+        game::markOnMinimap(minimap, game::GameData(object), *color);
+        return;
+    }
+    planet::markToolObject.callOriginal(object, minimap);
+}
+
+void* __fastcall toolObjectViewHook(void* prototype, void*, void* object) {
+    void* view = planet::toolObjectView.callOriginal(prototype, object);
+    if (const auto color = view && object ? mod().generator.alienColor(game::GameData(object)) : std::nullopt)
+        game::paintToolView(view, *color);
+    return view;
+}
+
+void* __cdecl rolloverEmpire(void* object) {
+    if (object && mod().generator.alienColor(game::GameData(object)))
+        if (const game::Empire owner = game::planetOwner())
+            return owner.raw();
+    return space::playerEmpire();
+}
+
+__declspec(naked) void rolloverEmpireHook() {
+    __asm {
+        push edi
+        call rolloverEmpire
+        add esp, 4
+        ret
+    }
+}
+
+bool redirectRolloverEmpire() {
+    const uintptr_t next = reinterpret_cast<uintptr_t>(planet::rolloverEmpireCall.at()) + 6;
+    const uint32_t relative = uint32_t(reinterpret_cast<uintptr_t>(&rolloverEmpireHook) - next);
+    return hooks::patch(planet::rolloverEmpireCall, 2, std::bit_cast<std::array<uint8_t, 4>>(relative));
+}
+
 bool __fastcall placeObjectUpdateHook(void* strategy, void*, char* tool, bool show, const char16_t** failText) {
     if (const std::optional<bool> verdict = feature::Generator::placement(strategy, tool, show, failText))
         return *verdict;
@@ -338,6 +383,9 @@ int installAll() {
         install(civilization::vehicleSetTarget, &setTargetHook),
         install(application::localeTableText, &localeTextHook),
         install(space::placeObjectUpdate, &placeObjectUpdateHook),
+        install(planet::markToolObject, &markToolObjectHook),
+        install(planet::toolObjectView, &toolObjectViewHook),
+        redirectRolloverEmpire(),
         install(space::toolTargetCheck, &toolTargetHook),
         install(space::combatantTakeDamage, &takeDamageHook),
         install(space::leavePlanet, &leavePlanetHook),

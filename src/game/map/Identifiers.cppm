@@ -48,6 +48,7 @@ enum class Archetype : int {
 
 enum class Relation : uint32_t {
     Attacked = 0x526e545,
+    DestroyedBuilding = 0x526e53c,
     DeclaredWar = 0x5f8a1ad,
     BeNasty = 0x577909b,
     FoughtEnemy = 0x5da8036,

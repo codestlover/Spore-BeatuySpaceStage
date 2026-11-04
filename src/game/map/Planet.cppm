@@ -30,5 +30,14 @@ const Function<void(__cdecl*)(uint32_t, const game::Vector*, float)> placeToolOb
 const Function<bool(__thiscall*)(char*, uint32_t)> hasPlanetObject{0xb8e190, "8b91380100002b9134010000b8e9a28b"};
 const Location toolObjectThunk{0xdc31e0, "8b4c24085685c974108b018b500c68af"};
 const Noun toolObjects{0x4e3fab5, 0xdc31e0};
+Hooked<void(__cdecl*)(void*, void*)> markToolObject{0x10421d0, "83ec40568b7424485733ff3bf70f8404"};
+const Function<void(__thiscall*)(void*, void*, int, int)> unmarkOnMinimap{0xe0f9a0, "8b44240c535556578bf985c00f85b500"};
+const Function<void(__thiscall*)(void*, void*, const void*, int, int)> markOnMinimap{
+    0xe10560, "83ec545355568b742468f30f1046048b"};
+const Function<uint32_t(__cdecl*)(const float*)> packColor{0x458590, "558bec83e4f083ec30c744242c100000"};
+Slot<void*(__thiscall*)(void*, void*)> toolObjectView{0x148691c, 0x8, 0xe91040};
+const Location rolloverEmpireCall{0xb6d626, "54e8843b4b008bc8e8fd"};
+const Function<void(__cdecl*)(void*, float, const game::Vector*)> colonyMood{0xff5120,
+                                                                          "5657e8d982b4ff8bc8e8e2a7b2ff8b74"};
 }
 
