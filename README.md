@@ -1,5 +1,5 @@
 
-<p align="center"><img src="docs/images/sheroll.gif" alt="Sheroll" width="600"></p>
+<p align="center"><img src="docs/images/sheroll.gif" alt="Sheroll" width="100%"></p>
 
 # Beatuy!SpaceStage
 
