@@ -286,7 +286,10 @@ installer:
 **The game build.** The mod checks the game before it changes anything.
 - It runs only on the game's `SporeApp_ModAPIFix.exe` dated 30 September 2024 (PE timestamp `1727737552`, image
   size 26,271,744 bytes). That executable carries the Galactic Adventures "march2017" code, which the Launcher starts.
-- It then compares every game function and piece of game data it uses, 193 in all, byte for byte.
+- It then compares the first bytes of the game functions it calls and of the game data and code it reads or patches
+  with the bytes it expects there.
+- Hooks are checked as they are placed. A function must start with the game's own bytes or with another mod's
+  detour, and a virtual-table slot must hold the game's function or another mod's code.
 - If the game is a different build, or another mod changed the same places in an unexpected way:
   - the mod changes nothing, and the game runs as vanilla;
   - a message box says that this version of Spore is not supported.
@@ -323,8 +326,8 @@ and the load order decides which list wins.
 The DLL is loaded by the Spore ModAPI Launcher Kit, but contains no Spore ModAPI code. It finds `SporeModAPI.dll`,
 registers a post-init callback, and starts once the game is up.
 
-- **The map of the game.** Every address the mod uses, with its first bytes, is listed in one map (`src/game/map`).
-  The map is checked at start-up.
+- **The map of the game.** Every address the mod uses is listed in one map (`src/game/map`), 193 entries in all.
+  127 of them carry the bytes expected there, and those bytes are checked at start-up or when the hook is placed.
 - **Hooks.** The mod places 40 hooks: 23 virtual-table slots and 17 code detours (Microsoft Detours). It also makes two
   byte-level changes to let the escort's rose take the mod's targets:
   - one 4-byte jump patch;
@@ -394,8 +397,8 @@ This produces `build/bin/BeatuySpaceStage.dll`.
 - The build compiles one file at a time.
 - After linking, `cmake/imports.sh` fails the build if the DLL imports anything other than `KERNEL32`, `USER32`,
   `VCRUNTIME140` and the universal CRT.
-- The build is reproducible: built from a fresh clone in another folder, it gives a DLL byte-identical to the one in
-  the release.
+- The build is reproducible. With the tools listed above, a build from a fresh clone in another folder gives a DLL
+  byte-identical to the one in the release.
 
 The package cannot be rebuilt from this repository. Its sources are made from the game's own data, which cannot be
 redistributed. Use the `BeatuySpaceStage.package` from the release.
@@ -433,7 +436,7 @@ next `cmake` run prepares the dependencies again.
 ### Testing and releases
 
 Each release is checked in two ways:
-- the mod's map of the game is checked against the game executable, byte for byte;
+- the bytes the mod's map of the game expects are checked against the game executable;
 - the mod is played in the game.
 
 These tools, the package sources and the release scripts work on the game's own code and data, which cannot be
@@ -445,7 +448,7 @@ redistributed. So they are not part of this repository, and the `.sporemod` is o
 | Path | Contents |
 | --- | --- |
 | `src/core` | Entry point, hooks, the order in which features run, the game's language |
-| `src/game/map` | The map of the game: every address the mod uses, checked byte for byte at start-up |
+| `src/game/map` | The map of the game: every address the mod uses, with the bytes expected there |
 | `src/game/objects` | Typed views over the game's objects: ships, vehicles, cities, empires, planets, the interface |
 | `src/game` | Memory access, maths and world queries shared by the features |
 | `src/space/orders` | Escort orders: the drawer, behaviour, marks, replies, saving and their texts |
