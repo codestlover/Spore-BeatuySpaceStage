@@ -366,8 +366,9 @@ answers its own texts through the hooked locale lookup, in the game's language.
 
 ## Building from source (Linux)
 
-> **A note from the author:** I build and test this mod only on Linux. I personally have no idea how to build it on
-> Windows, so there are no Windows build instructions here and I cannot help with a Windows build.
+> **A note from the author:** this release was built and tested on Linux, and the instructions below are for Linux.
+> The mod can also be built on other systems, such as Windows or macOS, if you know how to set up a clang++ build of a
+> 32-bit Windows DLL with C++20 modules there. Such builds are not covered here.
 > To play the mod, you don't need to build anything: just use the `.sporemod` from Releases.
 
 The mod is a 32-bit Windows DLL written with C++20 modules and cross-compiled with clang++ for the MSVC ABI.
