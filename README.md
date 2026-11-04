@@ -3,7 +3,7 @@
 
 # Beatuy!SpaceStage
 
-An overhaul of the **space stage** of *Spore: Galactic Adventures*. Your escort takes orders, civilization planets
+An overhaul of the **space stage** of *Spore*. Your escort takes orders, civilization planets
 defend themselves, hold grudges and fight wars of their own, tribes throw spears at your ship, enemy colonies at war
 open fire at once under a red sky, and a new colony tool tints a planet's atmosphere in any colour. Everything is built
 on the game's own systems: its behaviour trees, relation events, voice lines, effects and interface art.
