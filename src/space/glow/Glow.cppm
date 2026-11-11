@@ -23,7 +23,8 @@ public:
 private:
     struct War {
         float level = 0.0f;
-        DWORD lastTick = 0;
+        DWORD lastTick = 0, lastLook = 0;
+        bool fought = false;
     };
     struct Defense {
         DWORD nextProbe = 0;

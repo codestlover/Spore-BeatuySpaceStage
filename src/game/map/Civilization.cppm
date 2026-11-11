@@ -30,6 +30,7 @@ const Function<bool(__thiscall*)(void*, uint32_t, uint32_t)> isAllied{
 const Location isAlliedBit{0xd01ff0 + 0x26, "d1e8"};
 Hooked<float(__thiscall*)(void*, uint32_t, uint32_t, uint32_t, float)> applyRelationship{
     0xd06280, "d94424108b44240c5651d91c24508b44"};
+const Function<void(__thiscall*)(void*, char*, char*)> declareEmpireWar{0xd065e0, "515355568bd9e8c5ab31008b6c24188b"};
 
 const Function<const float*(__thiscall*)(char*, float*)> empireColor{
     0xc32e30, "81ec8400000053558be98b45108d880d"};

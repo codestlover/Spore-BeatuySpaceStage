@@ -17,6 +17,7 @@ const Function<void* (*)()> gameViewManager{0xb3d340, "a1c4ea6701c3"};
 const Function<char* (*)()> planetModel{0xb3d450, "a1f8ea6701c3"};
 const Function<char* (*)()> obstacleManager{0xb3d4c0, "a114eb6701c3"};
 const Function<void* (*)()> nounManager{0xb3d400, "a1e0ea6701c3"};
+const Function<void(__thiscall*)(void*, void*)> destroyNoun{0xb22560, "53568b74240cc64620018b068b10578b"};
 const Function<char* (*)()> timeManager{0xb3d480, "a104eb6701c3"};
 const Function<void* (*)()> messageManager{0x67dc80, "a190d85f01c3"};
 const Function<void* (*)()> localeManager{0x67de00, "a1f8d85f01c3"};

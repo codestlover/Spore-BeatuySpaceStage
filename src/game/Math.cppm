@@ -5,6 +5,7 @@
 module;
 #include <cmath>
 #include <cstdint>
+#include <cstdlib>
 
 export module beatuy.game.math;
 
@@ -48,6 +49,10 @@ inline float length(const Vector& vector) {
 
 inline float distance(const Vector& from, const Vector& to) {
     return length(from - to);
+}
+
+inline float between(float low, float high) {
+    return low + (high - low) * float(std::rand()) / float(RAND_MAX);
 }
 
 inline bool finite(const Vector& vector) {

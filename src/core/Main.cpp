@@ -8,6 +8,7 @@
 #include <bit>
 #include <cstdint>
 #include <optional>
+#include <span>
 
 import beatuy.core.hooks;
 import beatuy.core.language;
@@ -49,11 +50,11 @@ int __fastcall beamViewHook(void* view, void*, int time, int elapsed) {
     return result;
 }
 
-void __cdecl cityCaptureHook(void* manager, void* city, void* planet, uint32_t owner, float amount, uint32_t attacker,
-                     void* weapon) {
+void __cdecl cityCaptureHook(void* planet, void* city, void* place, uint32_t owner, float amount, uint32_t attacker,
+                             void* weapon) {
     if (city && game::onPlanet() && mod().shield.covers(city))
         return;
-    civilization::cityCapture.callOriginal(manager, city, planet, owner, amount, attacker, weapon);
+    civilization::cityCapture.callOriginal(planet, city, place, owner, amount, attacker, weapon);
 }
 
 int __fastcall takeDamageHook(void* combatant, void*, float damage, uint32_t politicalId, int type, const void* at,
@@ -96,12 +97,15 @@ void __fastcall exitHook(void* mode, void*) {
     mod().picker.close();
     mod().orders.close();
     mod().quickExit.close();
+    mod().colony.close();
     space::modeExit.callOriginal(mode);
 }
 
 float __fastcall applyHook(void* relations, void*, uint32_t who, uint32_t cause, uint32_t event, float scale) {
     if (!mod().civilization.ownCall())
         game::onPlanet();
+    if (mod().colony.pardons(who, cause, map::identifiers::Relation(event), scale))
+        return 0.0f;
     return civilization::applyRelationship.callOriginal(relations, who, cause, event, scale);
 }
 
@@ -324,7 +328,7 @@ bool __fastcall placeObjectUpdateHook(void* strategy, void*, char* tool, bool sh
 }
 
 void __fastcall shipSetTargetHook(void* combatant, void*, void* target) {
-    space::shipSetTarget.callOriginal(combatant, mod().orders.target(combatant, target));
+    space::shipSetTarget.callOriginal(combatant, mod().orders.target(combatant, mod().colony.aim(combatant, target)));
 }
 
 void __fastcall shipSetTargetInBandHook(void* ship, void*, void* target, int band) {
@@ -399,6 +403,18 @@ float __fastcall shipAccelerationHook(void* ship, void*) {
     return space::shipAcceleration.callOriginal(ship) * mod().shield.accelerationOf(ship);
 }
 
+void __fastcall shipMoveToHook(char* ship, void*, const game::Vector* point) {
+    game::Vector aim = point ? *point : game::Vector{};
+    bool sieged = point && mod().colony.steer(ship, aim);
+    bool kept = point && mod().shield.steer(ship, aim);
+    space::shipMoveTo.callOriginal(ship, sieged || kept ? &aim : point);
+}
+
+void __fastcall shipCollisionsHook(void* motion, void*, char* ship, float seconds) {
+    space::shipCollisions.callOriginal(motion, ship, seconds);
+    mod().shield.onCollisions(ship);
+}
+
 void __stdcall liftOverGroundHook(char* ship, const game::Vector* point, float clearance) {
     space::liftOverGround.callOriginal(ship, point, clearance);
     mod().travel.onLift(ship, point, clearance);
@@ -416,6 +432,24 @@ void __fastcall commHeaderHook(void* screen, void*, uint32_t politicalId, uint32
                                uint32_t fourth, uint32_t fifth, uint32_t sixth, uint32_t seventh, uint32_t eighth) {
     userInterface::commHeader.callOriginal(screen, politicalId, planet, third, fourth, fifth, sixth, seventh, eighth);
     mod().colony.onContact(screen, politicalId);
+}
+
+void __fastcall colonyModelsHook(char* civ, void*, void* culture) {
+    if (!mod().colony.keepsGrox(civ))
+        space::colonyModels.callOriginal(civ, culture);
+}
+
+void __cdecl raidShipsHook(char* ships, int* bombers, int* fighters, int* abductors, int fewest, int most) {
+    mod().shield.escort(ships, fewest, most);
+    space::raidShips.callOriginal(ships, bombers, fighters, abductors, fewest, most);
+}
+
+void __cdecl raidSpawnHook(char* raid, char* list, uint32_t attacker, void* design, float x, float y, float z,
+                           uint32_t ordered, uint32_t resting) {
+    std::array<game::RaidShip, 16> kept{};
+    std::span<game::RaidShip> lightened = mod().colony.lighten(raid, list, kept);
+    space::raidSpawn.callOriginal(raid, list, attacker, design, x, y, z, ordered, resting);
+    feature::Colony::restore(lightened);
 }
 
 void __fastcall commUnloadHook(void* screen, void*) {
@@ -466,8 +500,13 @@ int installAll() {
         install(space::shipAcceleration, &shipAccelerationHook),
         install(space::liftOverGround, &liftOverGroundHook),
         install(space::formationTick, &formationTickHook),
+        install(space::shipCollisions, &shipCollisionsHook),
+        install(space::shipMoveTo, &shipMoveToHook),
         install(userInterface::commHeader, &commHeaderHook),
         install(userInterface::commUnload, &commUnloadHook),
+        install(space::raidSpawn, &raidSpawnHook),
+        install(space::raidShips, &raidShipsHook),
+        install(space::colonyModels, &colonyModelsHook),
         install(space::shipHostile, &shipHostileHook),
         install(space::nearestHostileShip, &nearestHostileHook),
         install(tribe::spearUpdate, &spearUpdateHook),

@@ -49,6 +49,9 @@ public:
     char* aiTarget() const {
         return at<char*>(0x7ac);
     }
+    char* mission() const {
+        return at<char*>(0x800);
+    }
     char*& homeStar() const {
         return at<char*>(0x7b0);
     }

@@ -181,6 +181,25 @@ Empire empireOf(uint32_t politicalId) {
     return Empire(stars ? space::empireOf(stars, politicalId) : nullptr);
 }
 
+bool groxEmpire(uint32_t politicalId) {
+    Empire empire = empireOf(politicalId);
+    return empire && empire.archetype() == map::identifiers::Archetype::Grob;
+}
+
+Empire findGrox() {
+    static uint32_t known = uint32_t(-1);
+    if (groxEmpire(known))
+        return empireOf(known);
+    StarManager stars(space::starManager());
+    for (StarCell cell : stars.cells())
+        for (StarRecord star : cell.stars())
+            if (star && groxEmpire(star.politicalId())) {
+                known = star.politicalId();
+                return empireOf(known);
+            }
+    return Empire();
+}
+
 size_t identityColor(uint32_t politicalId) {
     static constexpr uint32_t firstIdentifier = 0x053dbcf1;
     static constexpr std::array<std::array<float, 3>, identityColors> colors{{
@@ -536,6 +555,14 @@ void declarePeace(uint32_t enemy, uint32_t player) {
             data.flags() &= ~1u;
 }
 
+void startWar(Empire attacker, Empire defender) {
+    void* relationships = civilization::relations();
+    if (!relationships || !attacker || !defender)
+        return;
+    for (int call = 0; call < 2 && !atWar(attacker.politicalId(), defender.politicalId()); ++call)
+        civilization::declareEmpireWar(relationships, attacker.raw(), defender.raw());
+}
+
 void showMood(City city, float value, const Vector* where) {
     Civilization owner = city ? city.civilization() : Civilization();
     void* floater = owner ? owner.floater() : nullptr;
@@ -610,6 +637,42 @@ int empireLevel(Empire empire) {
     return empire ? space::empireLevel(empire.raw()) : -1;
 }
 
+Array<PlanetRecord*> planetsOf(StarRecord star) {
+    char* planets = star ? space::starPlanets(star.raw()) : nullptr;
+    return planets ? Array<PlanetRecord*>(field<char*>(planets, 0), field<char*>(planets, 4)) : Array<PlanetRecord*>();
+}
+
+bool eventOnPlanet(PlanetRecord planet) {
+    char* missions = space::missionManager();
+    return missions && planet && space::eventOnPlanet(missions, planet.raw());
+}
+
+RaidEvent startRaid(map::identifiers::Mission mission, PlanetRecord planet, Empire owner, uint32_t attacker,
+                    int bombers, bool logged) {
+    char* missions = space::missionManager();
+    if (!missions || !planet || !owner)
+        return RaidEvent();
+    RaidEvent raid =
+        RaidEvent::of(Mission(space::createMission(missions, uint32_t(mission), planet.raw(), owner.raw(), 0)));
+    if (!raid)
+        return raid;
+    raid.attacker() = attacker;
+    space::raidTarget(raid.raw(), planet.raw());
+    raid.bombers() = bombers;
+    if (!logged)
+        raid.logged() = false;
+    space::acceptMission(raid.raw());
+    return raid;
+}
+
+void claimStar(StarRecord star, Empire empire) {
+    if (!star || !empire)
+        return;
+    star.politicalId() = empire.politicalId();
+    space::addStarOwnership(empire.raw(), star.raw());
+    space::refreshStar(star.raw());
+}
+
 void* loadTool(uint32_t identifier) {
     void* manager = space::toolManager();
     void* tool = nullptr;
@@ -640,6 +703,25 @@ bool placeEffect(VisualEffect effect, void* spatial, float scale) {
     catcher.caught.scale *= scale;
     effect.setSourceTransform(&catcher.caught);
     return true;
+}
+
+void destroy(GameData object) {
+    void* nouns = application::nounManager();
+    if (nouns && object)
+        application::destroyNoun(nouns, object.raw());
+}
+
+void placeEffectAt(VisualEffect effect, const Vector& at, const Vector& up, float scale) {
+    constexpr uint16_t scaled = 1, turned = 2, moved = 4;
+    if (!effect)
+        return;
+    Vector half = unit(Vector{0.0f, 0.0f, 1.0f} + unit(up), {1.0f, 0.0f, 0.0f});
+    std::array<float, 3> axis{half.x, half.y, half.z};
+    effects::Transform placed{.flags = scaled | turned | moved, .count = 0, .position{at.x, at.y, at.z}, .scale = scale};
+    for (size_t row = 0; row < 3; ++row)
+        for (size_t column = 0; column < 3; ++column)
+            placed.rotation[row * 3 + column] = 2.0f * axis[row] * axis[column] - float(row == column);
+    effect.setSourceTransform(&placed);
 }
 
 void loadSuperweaponTools(Civilization owner) {

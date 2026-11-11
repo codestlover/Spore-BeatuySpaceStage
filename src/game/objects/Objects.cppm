@@ -14,6 +14,7 @@ export import :city;
 export import :creature;
 export import :empire;
 export import :event;
+export import :mission;
 export import :planet;
 export import :ship;
 export import :interface;

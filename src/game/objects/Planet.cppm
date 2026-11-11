@@ -79,6 +79,17 @@ public:
     }
 };
 
+class CivData : public View {
+public:
+    using View::View;
+    std::span<Key> modelKeys() const {
+        return valuesAt<Key>(0x0);
+    }
+    uint32_t& politicalId() const {
+        return at<uint32_t>(0x14);
+    }
+};
+
 class StarRecord : public View {
 public:
     using View::View;

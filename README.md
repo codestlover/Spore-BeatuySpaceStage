@@ -5,10 +5,11 @@
 
 An overhaul of the **space stage** of *Spore*. Your escort takes orders, civilization planets
 defend themselves, hold grudges and fight wars of their own, tribes throw spears at your ship, enemy colonies at war
-open fire at once under a red sky, and a new colony tool tints a planet's atmosphere in any colour. Everything is built
-on the game's own systems: its behaviour trees, relation events, voice lines, effects and interface art.
+open fire at once, the sky turns red over any planet at war, and a new colony tool tints a planet's atmosphere in any
+colour. Everything is built on the game's own systems: its behaviour trees, relation events, voice lines, effects and
+interface art.
 
-Current version: **1.2.0**. Download `BeatuySpaceStage.sporemod` from the [Releases](../../releases) page.
+Current version: **1.3.0**. Download `BeatuySpaceStage.sporemod` from the [Releases](../../releases) page.
 
 ## What it changes
 
@@ -224,8 +225,13 @@ On planets of spacefaring empires:
   after a declaration of war. Now every idle turret of an empire at war with you takes your ship as its target within
   half a second.
 - **The red sky of war.**
-  - On another empire's colony, the atmosphere fades to red while that empire's relation to you is at its worst:
-    the lowest of the game's relation levels, the one with the red face.
+  - Over any planet where a war is under way, the atmosphere fades to red: while two of the sides there, among its
+    cities, the ships over it and your own ship, are at war with each other. Your escort is on your side, as the game
+    has it fight your enemies, not its own empire's. So the sky turns red over a colony raided by an empire at war
+    with its owner, yours too, over a civilization planet whose nations are at war, and over any planet whose cities
+    are at war with you.
+  - On another empire's colony it also turns red while that empire's relation to you is at its worst: the lowest of
+    the game's relation levels, the one with the red face.
   - When the capture bar first appears, the game's defence squads are called twice, at most once a minute.
   - The red never reaches the save or the planet's picture in the star system.
 
@@ -245,6 +251,38 @@ is below neutral turns on you as you fly over it, at war with you or not:
   galaxy. Each sends the squad the game itself sends as reinforcements, its ships coming from its stars within that
   reach. They hunt in the same order and stay while the hunt lasts.
 
+### Crusades against the Grox
+
+Now and then an empire of level 3 to 5 calls its allies to a crusade against the nearest Grox worlds.
+
+- **When.** The first call comes after 1 to 3 hours of play in space, at random, and each next one 1 to 3 hours after
+  the last crusade ends. The clock stands still while the game is paused.
+- **Who joins.** The caller is an empire of level 3 to 5 that is not allied with the Grox. Each of its allies joins
+  unless it is allied with the Grox too. You are never asked.
+  - A crusade needs the caller and at least two allies. If the caller cannot gather them, another empire tries; if
+    none can, nothing happens until the next call.
+- **One cluster of the Grox empire.** The Grox star nearest to the crusaders' stars and the 7 Grox stars nearest to it.
+- **The raids.** Every crusader declares war on the Grox, and every Grox colony in those stars that has no event of
+  its own is raided at once by one crusader: each colony goes to the crusader with the fewest colonies yet, the
+  nearest of them, so every crusader takes part. These are the game's own raids, with 8 and 7 bombers by turns,
+  half as many again as the most a raid of the game has, and each bomber brings its own 3 to 5 fighters as in any
+  raid.
+- **Over the colony where you are,** a crusade's raids come as fighters alone: each bomber comes as one more fighter,
+  and no fighter keeps by a bomber. A fighter falls on any enemy ship within 1,000, as fighters without a bomber do in
+  the game, so the Grox ships are hunted first; with none near, it lays siege to the nearest Grox city: it flies to
+  it and fires at its turrets, and at its buildings once its turrets are down. Raids away from you are fought out by
+  the game itself, with each raid's bombers and their fighters in its reckoning.
+- **Capture.** As in any raid of the game, a raid that takes a colony's cities passes the colony and its system to
+  its crusader. When a raid destroys a Grox colony instead and the Grox are left with no colony in that star system,
+  the system goes to the crusader who raided it. A Grox colony taken by another empire keeps its Grox buildings, as
+  one you take yourself does.
+- **Your part.** You hear nothing of a crusade unless you are allied with the Grox. Then the Grox call you to every
+  raided colony, once for each, with the game's own message and the raid's own entry in the event log.
+  - You cannot be everywhere at once. While the crusade lasts, the Grox take no offence at the raids you miss, turn
+    down or leave, and every raid you beat still earns their thanks. A raid that ends because the crusaders took the
+    colony is not one you beat.
+  - When the crusade is over and you beat none of its raids, the Grox take offence once, as for one missed raid.
+
 ### Shields and the strongest empires
 
 **Shields can be broken.** The shields the strongest empires raise (see below) hold a store of strength, and give way
@@ -258,7 +296,7 @@ before their time when that store runs out. Your own shield tool is unchanged.
   filled to what is left of the shield. The rollover grows to make room for it, and the health stays shown, since
   these shields do not make anything invulnerable.
 - Pointing anywhere at a city's dome shows a plate above the city, in the rollover's style, with the same icon and
-  the same bar for what is left of the dome.
+  the same bar for what is left of the dome. It is hidden while the communication screen is open.
 - Shields, domes and their waits stand still while the game is paused.
 
 **Every empire's level in the communication screen.** When you talk to an empire, the communication screen's header
@@ -266,27 +304,42 @@ shows its level with the game's own star badge, the one its planets' tooltips sh
 the left, and the star stands beside it, a little apart, on the same line.
 
 **The strongest empires defend their colonies.** An empire of the highest level (level 5, by the game's own measure
-of its size and reach, which also picks its ships' weapons) fights harder over its own colonies. Its ships in your
-escort stay ordinary escort ships:
-- **Homing missiles.** Each of its ships fighting you or your escort launches a *Super High-Load Missile* every
+of its size and reach, which also picks its ships' weapons) fights harder over its own colonies, against you and
+against any other empire alike. Its ships in your escort stay ordinary escort ships:
+- **Homing missiles.** Each of its ships fighting an enemy launches a *Super High-Load Missile* every
   6 seconds, within 400, with at most three in the air at once. A missile trails its empire's colour, flies a third
-  faster than its target moves, and turns tighter as it closes in.
+  faster than its target moves, and turns tighter as it closes in. A launch is heard within 600 of your ship, each to
+  its end, up to three at once.
 - **Agile ships.** Those ships fly half again as fast and gather speed two and a half times as quickly.
 - **Jumps.** A ship you fire a Proton Missile at will, four times out of five, jump aside in a flash and leave a
   decoy behind for the missile, which flies on without its lock. A missile that still passes near where the ship
   lands picks it up again. A jump under a shield costs the shield 2 % of its strength. Ships with nothing to fight
   now and then jump from place to place over the colony.
 - **Ship shields.** A ship below 60 % health raises a shield in a bubble for 90 seconds, at most once every
-  90 seconds.
-- **City shields.** When you or your escort hit one of its cities, the planet's command raises a dome over that city
+  90 seconds. A shield whose strength runs out, struck or with time, breaks with its shards and sound.
+- **City shields.** When anyone hits one of its cities, the planet's command raises a dome over that city
   for 2 minutes, and not again until 90 seconds after those. The dome is a shell of the game's shield clouds that
   stands on the city's walls. It guards the city hall, its buildings and its turrets, holds five sixths of what the
   city's buildings could take together (the city hall's health times their number), and cracks and breaks in the
-  same stages.
-  - **Weapons stop at the dome.** Shots from outside burst on it and beams end at its surface; what they would have
-    done is taken from the dome. The colony's own fire passes through.
+  same stages, struck or as its time runs out.
+  - **Weapons stop at the dome.** Shots and the strongest empires' missiles from outside burst on it and beams end
+    at its surface; what they would have done is taken from the dome. Waves run out over the dome from the spot each
+    blow strikes. The colony's own fire passes through.
+  - **No ship flies in.** While the dome stands, other empires' ships and your escort keep 15 units off it and
+    circle it instead of passing over the city, and close in again once it falls. A ship that still touches it,
+    yours too, bounces off as off a rock on the ground, with the game's own collision. A dome raised over a ship puts
+    it out on its surface. Only the city's own empire's ships pass, as its own fire does.
   - **A domed city is not captured.** Hits on the dome do not fill the planet's capture bar.
   - **Its turrets answer at once.** Every idle turret of the city turns on whoever hits the dome.
+- **Their raids' squads.** In a raid of theirs on anyone but the Grox, each bomber comes with 2 or 3 fighters,
+  where the game gives it 3 to 5. While an enemy ship is left over the planet, a bomber sends 1 or 2 of them after
+  the enemy, keeping one by its side, and calls them back once none is left; a fighter whose bomber falls keeps
+  hunting.
+- **Their raids.** Over a colony of a strongest empire, the raids of another empire of the highest level fight with
+  part of the same: their fighters launch its *Super High-Load Missiles* at what they fight, and their bombers raise
+  its ship shields when hurt. They neither jump nor gather speed.
+- **The Grox,** when they are of the highest level, keep the agile ships, the jumps from place to place and the city
+  shields. Their ships launch no missiles, raise no shields and do not jump aside from a Proton Missile.
 
 ### Glow Generator
 
@@ -420,16 +473,18 @@ and the load order decides which list wins.
   - Only ships still in the escort are written, up to 16.
   - Saves made without the mod load with every ship on *Free*.
   - Orders saved for a different player empire are dropped.
-- **Kept only for the session:** spared units, remembered city-hall attacks, ongoing hunts and disarmed tribes.
+- **Kept only for the session:** spared units, remembered city-hall attacks, ongoing hunts, disarmed tribes and the
+  crusades' clock. A crusade under way is followed for its captures only until you leave the space stage or load a
+  game; its raids are the game's own and go on.
 
 ## How it works
 
 The DLL is loaded by the Spore ModAPI Launcher Kit, but contains no Spore ModAPI code. It finds `SporeModAPI.dll`,
 registers a post-init callback, and starts once the game is up.
 
-- **The map of the game.** Every address the mod uses is listed in one map (`src/game/map`), 243 entries in all.
-  168 of them carry the bytes expected there, and those bytes are checked at start-up or when the hook is placed.
-- **Hooks.** The mod places 56 hooks: 26 virtual-table slots and 30 code detours (Microsoft Detours). It also makes
+- **The map of the game.** Every address the mod uses is listed in one map (`src/game/map`), 260 entries in all.
+  185 of them carry the bytes expected there, and those bytes are checked at start-up or when the hook is placed.
+- **Hooks.** The mod places 61 hooks: 26 virtual-table slots and 35 code detours (Microsoft Detours). It also makes
   four byte-level changes:
   - one 4-byte jump patch and one behaviour-record swap let the escort's rose take the mod's targets;
   - one decision of the ships' behaviour tree is swapped for the mod's, so that ships called in from another empire
@@ -440,8 +495,8 @@ registers a post-init callback, and starts once the game is up.
 | Game system | Hooks |
 | --- | --- |
 | Space game mode | Update, Exit and MouseDown slots; the system and planet cameras' mouse wheel |
-| Ship | Combatant TakeDamage, AddHostileUnit, IsInRange and SetTarget slots; the set-target-in-range-band call of the behaviour trees; the top speed and the acceleration; the check whether one ship is hostile to another; the search for the nearest enemy ship; the lift of a ship's flight over the ground; the escort formation's tick |
-| Space simulation | The space game simulator's Update; the player ship record's Write and Read |
+| Ship | Combatant TakeDamage, AddHostileUnit, IsInRange and SetTarget slots; the set-target-in-range-band call of the behaviour trees; the top speed and the acceleration; the check whether one ship is hostile to another; the search for the nearest enemy ship; the lift of a ship's flight over the ground; the collision step of a ship's flight; the setting of a ship's destination on a planet; the escort formation's tick |
+| Space simulation | The space game simulator's Update; the player ship record's Write and Read; the list of a raid's ships and their spawn over a planet; the fill of a colony's building designs |
 | Tools | The tool target check; FireTool; the place-object tool's Update; the area repair's and the Rally Call's WhileFiring; a placed tool object's minimap mark and model view; the tool object rollover's colour (a redirected call); the launch of a tool's projectile; a beam's view Update |
 | Combat and flow | The missile turret's WhileFiring and the defence missile's launch; base combatant TakeDamage; leaving the planet; the player ship destroyed; a city's capture |
 | Civilization | Relationship apply; vehicle AddOrder and AddOrderAt; vehicle combatant slots; city vehicle spawn; belief projectile update and launch; the voice queue |
@@ -555,17 +610,17 @@ redistributed. So they are not part of this repository, and the `.sporemod` is o
 | --- | --- |
 | `src/core` | Entry point, hooks, the order in which features run, the game's language |
 | `src/game/map` | The map of the game: every address the mod uses, with the bytes expected there |
-| `src/game/objects` | Typed views over the game's objects: ships, vehicles, cities, empires, planets, the interface |
+| `src/game/objects` | Typed views over the game's objects: ships, vehicles, cities, empires, planets, raids, the interface |
 | `src/game` | Memory access, maths and world queries shared by the features |
 | `src/space/orders` | Escort orders: the drawer, behaviour, marks, replies, saving and their texts |
 | `src/space/civilization` | Civilization planets: defence, relations, common command, bribes, superweapons, designs |
 | `src/space/radio` | The civilization radio |
 | `src/space/tribe` | Tribal defence and spears |
-| `src/space/colony` | Enemy colony turrets |
+| `src/space/colony` | Enemy colony turrets, the empire's level in the communication screen, the crusades against the Grox |
 | `src/space/shield` | Breakable shields, city domes and the strongest empires' ships |
 | `src/space/glow` | The red sky of war and the atmosphere tint |
 | `src/space/generator` | The Glow Generator: its placement, palette and texts |
-| `src/space/travel`, `src/space/exit` | Double-click travel and the quick exit |
+| `src/space/travel`, `src/space/exit` | Double-click travel, the flight over rocks and hills, and the quick exit |
 | `src/space/escort` | The fire guard, the area repair and the hunt for a Grox in the escort |
 | `cmake` | The clang++ cross toolchain and the scripts `setup.sh`, `layout.sh`, `imports.sh`, `format.sh` |
 

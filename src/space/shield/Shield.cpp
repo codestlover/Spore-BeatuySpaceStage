@@ -10,6 +10,7 @@ module;
 #include <cstdint>
 #include <cstdlib>
 #include <optional>
+#include <ranges>
 #include <span>
 
 module beatuy.feature.shield;
@@ -18,6 +19,7 @@ import beatuy.game;
 
 namespace feature {
 namespace {
+using map::identifiers::ShipKind;
 using map::identifiers::Type;
 using shield::settings;
 
@@ -70,6 +72,26 @@ std::optional<float> domeEntry(const game::Vector& from, const game::Vector& tow
     return std::nullopt;
 }
 
+struct Contact {
+    game::Vector normal;
+    float depth;
+};
+
+std::optional<Contact> domeContact(game::City city, game::Ship ship) {
+    const game::Vector* middle = city && city.politicalId() != ship.politicalId() ? city.place().position() : nullptr;
+    if (!middle)
+        return std::nullopt;
+    game::Vector offset = ship.location() - *middle, above = game::unit(*middle);
+    float reach = cityRadiusOf(city) + ship.radius(), distance = game::length(offset);
+    if (distance >= reach || game::dot(offset, above) < 0.0f)
+        return std::nullopt;
+    return Contact{game::unit(offset, above), reach - distance};
+}
+
+bool strongest(uint32_t politicalId) {
+    return game::empireLevel(game::empireOf(politicalId)) + 1 >= settings.eliteLevel;
+}
+
 bool outside(const game::Vector& point, game::City city) {
     const game::Vector* middle = city.place().position();
     return middle && game::distance(point, *middle) > cityRadiusOf(city);
@@ -95,8 +117,7 @@ bool Shield::elitePlanet() const {
     if (!game::onPlanet() || game::planetTechnology() != map::identifiers::Technology::Empire)
         return false;
     game::Empire owner = game::planetOwner();
-    return owner && owner.politicalId() != game::playerPoliticalId() &&
-           game::empireLevel(owner) + 1 >= settings.eliteLevel;
+    return owner && owner.politicalId() != game::playerPoliticalId() && strongest(owner.politicalId());
 }
 
 float Shield::scaleOf(const Barrier& barrier) {
@@ -281,7 +302,7 @@ void Shield::moveBursts(DWORD now) {
     }
 }
 
-Shield::Captain* Shield::captainOf(game::Ship ship) {
+Shield::Captain* Shield::captainOf(game::Ship ship, bool guest) {
     auto found = std::ranges::find(used(captains, captainCount), ship, &Captain::ship);
     if (found != used(captains, captainCount).end())
         return &*found;
@@ -289,7 +310,8 @@ Shield::Captain* Shield::captainOf(game::Ship ship) {
         return nullptr;
     ship.addReference();
     DWORD stagger = DWORD(captainCount) * settings.missileMilliseconds / shield::maximumCaptains;
-    captains[captainCount] = Captain{.ship = ship, .nextMissile = GetTickCount() + stagger, .shieldReady = 0};
+    captains[captainCount] =
+        Captain{.ship = ship, .nextMissile = GetTickCount() + stagger, .shieldReady = 0, .guest = guest};
     return &captains[captainCount++];
 }
 
@@ -311,8 +333,10 @@ void Shield::fireMissile(Captain& captain, game::GameData target, DWORD now) {
     bool fired = game::fireTool(missileTool, captain.ship, target);
     firing = false;
     captain.nextMissile = now + settings.missileMilliseconds;
-    if (fired)
-        play(launchClip, settings.launchSound, settings.launchSoundMilliseconds);
+    auto silent = std::ranges::find(launchClips, false, &Clip::heard);
+    bool audible = game::distance(game::shipPosition(), captain.ship.position()) <= settings.hearRange;
+    if (fired && audible && silent != launchClips.end())
+        play(*silent, settings.launchSound, settings.launchSoundMilliseconds);
 }
 
 bool Shield::launching() const {
@@ -333,7 +357,12 @@ bool Shield::onMissile(void* missile) {
     shot.addReference();
     aimed.addReference();
     Flight& flight = flights[flightCount++];
-    flight = Flight{.missile = shot, .target = aimed, .seen = aimed.position(), .sampled = GetTickCount()};
+    flight = Flight{.missile = shot,
+                    .target = aimed,
+                    .seen = aimed.position(),
+                    .last = shot.position(),
+                    .sampled = GetTickCount(),
+                    .shooter = launcher.politicalId()};
     game::Guidance guidance = shot.guidance();
     if (guidance)
         guidance.flownMilliseconds() += settings.missileHeadStart;
@@ -346,7 +375,7 @@ bool Shield::onMissile(void* missile) {
 }
 
 float Shield::agility(void* ship, float factor) const {
-    auto leads = [ship](const Captain& captain) { return captain.ship.raw() == ship; };
+    auto leads = [ship](const Captain& captain) { return captain.ship.raw() == ship && !captain.guest; };
     bool agile = std::ranges::any_of(std::span(captains).first(size_t(captainCount)), leads);
     return std::array{1.0f, factor}[size_t(agile)];
 }
@@ -491,7 +520,9 @@ bool Shield::onProjectile(void* fired, void* launched, const game::Vector* origi
     void* aimed = tool ? tool.target() : nullptr;
     if (!aimed || std::ranges::find(settings.lockingTools, tool.identifier()) == settings.lockingTools.end())
         return false;
-    auto locked = [aimed](const Captain& captain) { return captain.ship.body().raw() == aimed; };
+    auto locked = [aimed](const Captain& captain) {
+        return captain.ship.body().raw() == aimed && !captain.guest && !game::groxEmpire(captain.ship.politicalId());
+    };
     auto found = std::ranges::find_if(used(captains, captainCount), locked);
     if (found == used(captains, captainCount).end() || rand() % 100 >= settings.decoyChance)
         return false;
@@ -532,6 +563,16 @@ void Shield::guide(DWORD now) {
             flights[flightCount] = Flight{};
             continue;
         }
+        game::Vector here = flight.missile.position(), from = flight.last;
+        flight.last = here;
+        if (Barrier* struck = domeAhead(from, here, flight.shooter)) {
+            game::Vector toward = game::unit(here - from);
+            std::optional<float> entry = domeEntry(from, toward, struck->city);
+            strike(*struck, game::Tool(missileTool).maximumDamage(), entry ? from + toward * *entry : here);
+            game::destroy(flight.missile);
+            land(flight, now);
+            continue;
+        }
         if (flight.trail)
             game::placeEffect(flight.trail, flight.missile.body().raw(), 1.0f);
         game::Guidance guidance = flight.missile.guidance();
@@ -563,21 +604,29 @@ void Shield::command(DWORD now) {
         captains[i] = captains[--captainCount];
     }
     for (game::Ship ship : game::each<game::Ship>(map::space::ships)) {
-        if (!ship || !ship.alive() || ship.politicalId() != owner || game::playerSide(ship.fighter().raw()))
+        if (!ship || !ship.alive() || game::playerSide(ship.fighter().raw()))
+            continue;
+        uint32_t politicalId = ship.politicalId();
+        ShipKind kind = ship.kind();
+        bool guest = politicalId != owner, raider = guest && kind == ShipKind::Raider,
+             bomber = guest && kind == ShipKind::Bomber;
+        if (guest && (!(raider || bomber) || !strongest(politicalId)))
             continue;
         game::Combatant fighter = ship.fighter();
         void* target = fighter.target();
-        if (fighter.health() > 0.0f && !target)
+        if (!guest && fighter.health() > 0.0f && !target)
             patrol(ship, now);
-        if (!(fighter.health() > 0.0f) || !target || !game::playerSide(target))
+        game::GameData foe = target ? game::Combatant(target).owner() : game::GameData();
+        bool fighting = foe && foe.politicalId() != politicalId;
+        if (!(fighter.health() > 0.0f) || !(fighting || bomber))
             continue;
-        Captain* captain = captainOf(ship);
-        if (!captain)
+        Captain* captain = captainOf(ship, guest);
+        if (!captain || game::groxEmpire(politicalId))
             continue;
-        if (LONG(now - captain->nextMissile) >= 0)
-            fireMissile(*captain, game::Combatant(target).owner(), now);
+        if (fighting && !bomber && LONG(now - captain->nextMissile) >= 0)
+            fireMissile(*captain, foe, now);
         bool hurt = fighter.health() < fighter.maximumHealth() * settings.raiseBelow;
-        if (hurt && !barrierOf(fighter.raw()) && LONG(now - captain->shieldReady) >= 0) {
+        if (!raider && hurt && !barrierOf(fighter.raw()) && LONG(now - captain->shieldReady) >= 0) {
             captain->shieldReady = now + settings.shipCooldownMilliseconds;
             raiseShip(ship, now);
         }
@@ -598,7 +647,7 @@ game::City Shield::cityOf(game::GameData part) const {
 }
 
 void Shield::guardCity(void* combatant, uint32_t politicalId) {
-    if (politicalId != game::playerPoliticalId() || !elitePlanet())
+    if (politicalId == uint32_t(-1) || politicalId == game::planetOwnerPoliticalId() || !elitePlanet())
         return;
     game::GameData part = game::Combatant(combatant).owner();
     if (!part || part.politicalId() != game::planetOwnerPoliticalId())
@@ -628,7 +677,12 @@ bool Shield::absorb(void* combatant, int type, float damage, void* attacker) {
     if (!barrier)
         return false;
     alert(*barrier, attacker);
-    strike(*barrier, damage);
+    game::GameData striker = attacker ? game::Combatant(attacker).owner() : game::GameData();
+    const game::Vector* middle = barrier->city && striker ? barrier->city.place().position() : nullptr;
+    strike(*barrier, damage,
+           middle ? std::optional(*middle + game::unit(striker.position() - *middle, game::unit(*middle)) *
+                                                cityRadiusOf(barrier->city))
+                  : std::nullopt);
     return true;
 }
 
@@ -640,7 +694,7 @@ void Shield::alert(const Barrier& barrier, void* attacker) {
             turret.fighter().setTarget(attacker);
 }
 
-void Shield::strike(Barrier& barrier, float damage) {
+void Shield::strike(Barrier& barrier, float damage, std::optional<game::Vector> at) {
     barrier.left -= damage;
     if (barrier.left <= 0.0f) {
         lower(int(&barrier - barrierList.data()), true);
@@ -648,12 +702,33 @@ void Shield::strike(Barrier& barrier, float damage) {
     }
     int stage = barrier.stage;
     settle(barrier, true);
+    bool spotted = barrier.city && at;
+    if (spotted)
+        ripple(barrier, *at);
     DWORD now = GetTickCount();
     if (barrier.stage != stage || LONG(now - barrier.nextHit) < 0)
         return;
     barrier.nextHit = now + settings.hitMilliseconds;
-    burst(barrier, lookOf(barrier).hit, settings.hitBurstMilliseconds);
+    if (!spotted)
+        burst(barrier, lookOf(barrier).hit, settings.hitBurstMilliseconds);
     game::playAudio(settings.hitSound);
+}
+
+void Shield::ripple(const Barrier& barrier, const game::Vector& at) {
+    const game::Vector* middle = barrier.city.place().position();
+    game::VisualEffect effect = middle && burstCount < shield::maximumBursts
+                                    ? game::EffectsManager::get().create(settings.domeRipple)
+                                    : game::VisualEffect();
+    if (!effect)
+        return;
+    game::placeEffectAt(effect, at, game::unit(at - *middle, game::unit(*middle)), scaleOf(barrier));
+    effect.start();
+    barrier.city.addReference();
+    bursts[burstCount++] = Burst{.holder = barrier.city,
+                                 .spatial = nullptr,
+                                 .effect = effect,
+                                 .scale = scaleOf(barrier),
+                                 .until = GetTickCount() + settings.rippleMilliseconds};
 }
 
 Shield::Shooter Shield::shooterOf(game::Tool tool) {
@@ -681,12 +756,131 @@ Shield::Barrier* Shield::domeAhead(const game::Vector& from, const game::Vector&
     return nullptr;
 }
 
+void Shield::escort(char* ships, int& fewest, int& most) const {
+    game::RaidEvent raid = game::RaidEvent::ofShips(ships);
+    if (!raid || !strongest(raid.attacker()) || game::groxEmpire(raid.owner()))
+        return;
+    fewest = settings.raidEscorts[0];
+    most = settings.raidEscorts[1];
+}
+
+void Shield::dispatch() {
+    for (int i = sortieCount - 1; i >= 0; --i) {
+        Sortie& sortie = sorties[i];
+        if (sortie.fighter.alive() && sortie.bomber.alive())
+            continue;
+        sortie.fighter.release();
+        sortie.bomber.release();
+        sorties[i] = sorties[--sortieCount];
+        sorties[sortieCount] = Sortie{};
+    }
+    game::Array<game::Ship*> ships = game::each<game::Ship>(map::space::ships);
+    auto raiding = [](game::Ship ship) {
+        game::RaidEvent raid = ship && ship.alive() && ship.kind() == ShipKind::Bomber
+                                   ? game::RaidEvent::of(game::Mission(ship.mission()))
+                                   : game::RaidEvent();
+        return raid && raid.attacker() == ship.politicalId() && strongest(ship.politicalId()) &&
+               !game::groxEmpire(raid.owner());
+    };
+    for (game::Ship bomber : ships | std::views::filter(raiding)) {
+        bool war = bomber.decisionFlags() & game::Ship::warOnPlanetFlag;
+        if (!map::space::nearestHostileShip(bomber.raw(), war, true)) {
+            recall(bomber);
+            continue;
+        }
+        auto escorting = [&](game::Ship ship) {
+            return ship && ship.alive() && ship.kind() == ShipKind::Raider && ship.leader() == bomber.raw();
+        };
+        auto sent = std::ranges::count(used(sorties, sortieCount), bomber, &Sortie::bomber);
+        auto escorts = ships | std::views::filter(escorting);
+        int wanted = std::min(settings.mostSorties, int(std::ranges::distance(escorts) + sent) - 1);
+        for (game::Ship fighter : escorts) {
+            if (sent >= wanted || sortieCount >= shield::maximumSorties)
+                break;
+            fighter.addReference();
+            bomber.addReference();
+            sorties[sortieCount++] = Sortie{.fighter = fighter, .bomber = bomber};
+            fighter.follow(game::Ship());
+            ++sent;
+        }
+    }
+}
+
+void Shield::recall(game::Ship bomber) {
+    for (int i = sortieCount - 1; i >= 0; --i) {
+        Sortie& sortie = sorties[i];
+        if (sortie.bomber != bomber)
+            continue;
+        sortie.fighter.follow(bomber);
+        sortie.fighter.release();
+        sortie.bomber.release();
+        sorties[i] = sorties[--sortieCount];
+        sorties[sortieCount] = Sortie{};
+    }
+}
+
+void Shield::onCollisions(char* shipObject) {
+    game::Ship ship(shipObject);
+    if (!ship || !game::onPlanet())
+        return;
+    for (const Barrier& barrier : barriers())
+        if (std::optional<Contact> contact = domeContact(barrier.city, ship)) {
+            game::Vector push = contact->normal * contact->depth;
+            map::space::collisionPush(shipObject, &push, &contact->normal, settings.rockContact);
+        }
+}
+
+bool Shield::steer(char* shipObject, game::Vector& point) {
+    game::Ship ship(shipObject);
+    if (!barrierCount || !ship || ship.kind() == ShipKind::Player)
+        return false;
+    game::Vector aim = game::unit(point) * ship.flightRadius();
+    bool moved = false;
+    for (const Barrier& barrier : barriers()) {
+        const game::Vector* middle = barrier.city && barrier.city.politicalId() != ship.politicalId()
+                                         ? barrier.city.place().position()
+                                         : nullptr;
+        if (!middle)
+            continue;
+        game::Vector up = game::unit(*middle), offset = aim - *middle;
+        float height = game::dot(offset, up), rise = std::max(height, 0.0f);
+        float berth = cityRadiusOf(barrier.city) + ship.radius() + settings.domeBerth;
+        game::Vector across = offset - up * height;
+        if (rise >= berth || game::length(across) * game::length(across) >= berth * berth - rise * rise)
+            continue;
+        game::Vector side = ship.location() - *middle;
+        game::Vector away = game::unit(
+            across, game::unit(side - up * game::dot(side, up), game::unit(game::cross(up, {up.y, up.z, up.x}))));
+        aim = *middle + up * height + away * std::sqrt(berth * berth - rise * rise);
+        moved = true;
+    }
+    if (moved)
+        point = aim;
+    return moved;
+}
+
+void Shield::repel() {
+    auto resting = [](game::Ship ship) { return ship && ship.alive() && (ship.kinematic() || ship.atDestination()); };
+    if (game::Ship player = game::playerShip(); resting(player))
+        keepOut(player);
+    for (game::Ship ship : game::each<game::Ship>(map::space::ships) | std::views::filter(resting))
+        keepOut(ship);
+}
+
+void Shield::keepOut(game::Ship ship) {
+    for (const Barrier& barrier : barriers())
+        if (std::optional<Contact> contact = domeContact(barrier.city, ship)) {
+            game::Vector at = ship.location() + contact->normal * contact->depth;
+            map::space::shipSnapTo(ship.raw(), &at);
+        }
+}
+
 void Shield::intercept() {
     for (int i = shotCount - 1; i >= 0; --i) {
         Shot& shot = shots[i];
         bool flying = shot.projectile.alive() && shot.projectile.stage() == game::Projectile::flying;
-        game::Vector at = flying ? shot.projectile.position() : shot.last;
-        Barrier* struck = flying ? domeAhead(shot.last, at, shot.shooter.politicalId) : nullptr;
+        game::Vector at = flying ? shot.projectile.position() : shot.last, from = shot.last;
+        Barrier* struck = flying ? domeAhead(from, at, shot.shooter.politicalId) : nullptr;
         shot.last = at;
         if (flying && !struck)
             continue;
@@ -695,7 +889,9 @@ void Shield::intercept() {
             shot.projectile.lowestDamage() = shot.projectile.highestDamage() = 0;
             shot.projectile.flownMilliseconds() += settings.fuseMilliseconds;
             Shooter shooter = shooterOf(shot.projectile.tool());
-            game::Vector toward = game::unit(at - shot.last);
+            game::Vector toward = game::unit(at - from);
+            std::optional<float> entry = domeEntry(from, toward, struck->city);
+            game::Vector spot = entry ? from + toward * *entry : at;
             void* victim = struck->parts[0].cast(Type::Combatant);
             float damage = float(low + rand() % (std::max(high - low, 0) + 1));
             alert(*struck, shooter.fighter);
@@ -703,7 +899,7 @@ void Shield::intercept() {
                 game::callVirtual<int>(victim, settings.takeDamageSlot, 0.0f, shooter.politicalId,
                                        shot.projectile.damageKind(), &toward, shooter.fighter);
             if (Barrier* standing = barrierOf(victim))
-                strike(*standing, damage);
+                strike(*standing, damage, spot);
         }
         shot.projectile.release();
         shots[i] = shots[--shotCount];
@@ -836,7 +1032,7 @@ void Shield::dropPlate() {
 }
 
 void Shield::showPlate() {
-    const Barrier* barrier = pointedDome();
+    const Barrier* barrier = game::conversing() ? nullptr : pointedDome();
     const game::Vector* middle = barrier ? barrier->city.place().position() : nullptr;
     game::Projection projection(game::activeViewer());
     std::optional<game::Projection::ScreenPoint> point =
@@ -985,6 +1181,12 @@ void Shield::releaseAll() {
         shot = Shot{};
     }
     shotCount = 0;
+    for (Sortie& sortie : used(sorties, sortieCount)) {
+        sortie.fighter.release();
+        sortie.bomber.release();
+        sortie = Sortie{};
+    }
+    sortieCount = 0;
     while (barrierCount)
         lower(barrierCount - 1, false);
     clearEnded(GetTickCount() + settings.endMilliseconds + 1);
@@ -1016,8 +1218,9 @@ void Shield::releaseAll() {
     for (Ward& ward : used(wards, wardCount))
         ward.city.release();
     wardCount = 0;
-    for (Clip* clip : {&decoyClip, &launchClip})
-        quiet(*clip);
+    quiet(decoyClip);
+    for (Clip& clip : launchClips)
+        quiet(clip);
 }
 
 void Shield::onLeavePlanet(bool) {
@@ -1049,7 +1252,7 @@ void Shield::holdDeadlines(DWORD step) {
 void Shield::tick() {
     if (!game::onPlanet()) {
         if (barrierCount || burstCount || captainCount || wardCount || flightCount || strayCount || hopCount ||
-            shotCount || endedCount || plate.root)
+            sortieCount || shotCount || endedCount || plate.root)
             releaseAll();
         lastTick = 0;
         return;
@@ -1059,9 +1262,11 @@ void Shield::tick() {
     lastTick = now;
     if (game::paused())
         holdDeadlines(step);
-    for (Clip* clip : {&decoyClip, &launchClip})
-        if (clip->heard && LONG(now - clip->until) >= 0)
-            quiet(*clip);
+    auto done = [now](const Clip& clip) { return clip.heard && LONG(now - clip.until) >= 0; };
+    if (done(decoyClip))
+        quiet(decoyClip);
+    for (Clip& clip : launchClips | std::views::filter(done))
+        quiet(clip);
     moveBursts(now);
     clearEnded(now);
     guide(now);
@@ -1074,7 +1279,7 @@ void Shield::tick() {
         barrier.left -= barrier.strength * float(aged) /
                         float(barrier.ship ? settings.shipMilliseconds : settings.cityMilliseconds);
         if (!holder.alive() || !(barrier.left > 0.0f) || LONG(now - barrier.until) >= 0) {
-            lower(i, false);
+            lower(i, holder.alive());
             continue;
         }
         settle(barrier, false);
@@ -1088,10 +1293,12 @@ void Shield::tick() {
     if (game::paused())
         return;
     intercept();
+    repel();
     weave(now);
     if (LONG(now - nextThink) < 0)
         return;
     nextThink = now + settings.thinkMilliseconds;
+    dispatch();
     if (elitePlanet())
         command(now);
 }

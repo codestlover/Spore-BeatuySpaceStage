@@ -10,6 +10,7 @@ module;
 
 export module beatuy.game.objects:empire;
 
+import :planet;
 import :view;
 import beatuy.game.map;
 import beatuy.game.math;
@@ -25,8 +26,17 @@ public:
     map::identifiers::Archetype& archetype() const {
         return at<map::identifiers::Archetype>(0x58);
     }
+    Array<Empire*> allies() const {
+        return arrayAt<Empire*>(0x70);
+    }
     uint32_t& politicalId() const {
         return at<uint32_t>(0x84);
+    }
+    Array<StarRecord*> stars() const {
+        return arrayAt<StarRecord*>(0x88);
+    }
+    char* culture() const {
+        return object ? object + 0x108 : nullptr;
     }
     uint32_t& homeStarIdentifier() const {
         return at<uint32_t>(0xb0);

@@ -141,14 +141,14 @@ target_sources(beatuy_game PUBLIC FILE_SET CXX_MODULES BASE_DIRS src FILES
   src/game/objects/Objects.cppm src/game/objects/View.cppm src/game/objects/Application.cppm
   src/game/objects/Belief.cppm src/game/objects/Camera.cppm src/game/objects/City.cppm src/game/objects/Combat.cppm
   src/game/objects/Creature.cppm src/game/objects/Empire.cppm src/game/objects/Event.cppm
-  src/game/objects/GameData.cppm src/game/objects/Interface.cppm src/game/objects/Planet.cppm
-  src/game/objects/Ship.cppm src/game/objects/Vehicle.cppm)
+  src/game/objects/GameData.cppm src/game/objects/Interface.cppm src/game/objects/Mission.cppm
+  src/game/objects/Planet.cppm src/game/objects/Ship.cppm src/game/objects/Vehicle.cppm)
 target_compile_options(beatuy_game PRIVATE -Wall)
 target_compile_definitions(beatuy_game PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX UNICODE _UNICODE)
 add_library(BeatuySpaceStage SHARED src/core/Main.cpp src/core/Mod.cpp
   src/space/civilization/Civilization.cpp src/space/civilization/Designs.cpp src/space/civilization/Marker.cpp
   src/space/civilization/Text.cpp src/space/colony/Colony.cpp src/space/colony/Contact.cpp
-  src/space/escort/Escort.cpp src/space/escort/Hunt.cpp
+  src/space/colony/Crusade.cpp src/space/escort/Escort.cpp src/space/escort/Hunt.cpp
   src/space/exit/QuickExit.cpp src/space/generator/Generator.cpp src/space/generator/Picker.cpp
   src/space/glow/Glow.cpp src/space/orders/Behaviour.cpp src/space/orders/Mark.cpp src/space/orders/Orders.cpp
   src/space/orders/Panel.cpp src/space/orders/Reply.cpp src/space/orders/Saving.cpp
@@ -159,7 +159,7 @@ target_sources(BeatuySpaceStage PRIVATE FILE_SET CXX_MODULES BASE_DIRS src FILES
   src/space/civilization/Civilization.cppm src/space/civilization/Designs.cppm src/space/civilization/Marker.cppm
   src/space/civilization/Render.cppm src/space/civilization/Settings.cppm src/space/civilization/Text.cppm
   src/space/civilization/Unit.cppm src/space/colony/Colony.cppm src/space/colony/Contact.cppm
-  src/space/escort/Escort.cppm src/space/escort/Hunt.cppm
+  src/space/colony/Crusade.cppm src/space/escort/Escort.cppm src/space/escort/Hunt.cppm
   src/space/exit/QuickExit.cppm src/space/generator/Generator.cppm src/space/generator/Picker.cppm
   src/space/generator/Texts.cppm src/space/generator/WindowProcedure.cppm src/space/glow/Color.cppm
   src/space/glow/Glow.cppm src/space/orders/Behaviour.cppm src/space/orders/Book.cppm src/space/orders/Mark.cppm

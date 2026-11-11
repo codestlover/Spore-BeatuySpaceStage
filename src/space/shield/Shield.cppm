@@ -6,6 +6,7 @@ module;
 #include <Windows.h>
 #include <array>
 #include <cstdint>
+#include <optional>
 #include <span>
 
 export module beatuy.feature.shield;
@@ -51,6 +52,12 @@ struct Settings {
     float shipScale = 0.65f;
     float cityStrength = 3000.0f, cityStrengthShare = 1.2f, cityRadius = 60.0f, cityPadding = 1.08f;
     float domeRadius = 64.0f;
+    int rockContact = 3;
+    float domeBerth = 15.0f;
+    std::array<int, 2> raidEscorts{2, 3};
+    int mostSorties = 2;
+    uint32_t domeRipple = 0xd8d698b8;
+    DWORD rippleMilliseconds = 1200;
     DWORD cityMilliseconds = 120000, cityCooldownMilliseconds = 90000;
     std::array<float, 2> stages{2.0f / 3.0f, 1.0f / 3.0f};
     uint32_t dome = 0x53293a51;
@@ -81,9 +88,9 @@ struct Settings {
     game::Key gaugeIcon{.instance = 0xb17df2dd, .type = 0x2f7d0004, .group = 0x3064cb38};
 };
 inline constexpr Settings settings{};
-inline constexpr int maximumBarriers = 24, maximumParts = 64, maximumBursts = 32, maximumCaptains = 32,
+inline constexpr int maximumBarriers = 24, maximumParts = 64, maximumBursts = 32, maximumCaptains = 96,
                      maximumWards = 24, maximumMissiles = 8, maximumStrays = 8, maximumHops = 4, maximumShots = 48,
-                     maximumBeamPoints = 128;
+                     maximumBeamPoints = 128, maximumSorties = 32;
 }
 
 namespace feature {
@@ -93,6 +100,9 @@ public:
     void onLeavePlanet(bool destroyed);
     bool onDamage(void* combatant, uint32_t politicalId, int type, float damage, void* attacker);
     bool onShipDamage(void* combatant, int type, float damage);
+    void onCollisions(char* ship);
+    void escort(char* ships, int& fewest, int& most) const;
+    bool steer(char* ship, game::Vector& point);
     [[nodiscard]] bool launching() const;
     [[nodiscard]] bool covers(void* city) const;
     struct Cut {
@@ -129,7 +139,10 @@ private:
         game::Ship ship;
         DWORD nextMissile = 0, shieldReady = 0, nextDash = 0, dashUntil = 0;
         game::Vector dashVelocity{}, landing{};
-        bool dashing = false;
+        bool dashing = false, guest = false;
+    };
+    struct Sortie {
+        game::Ship fighter, bomber;
     };
     struct Ward {
         game::City city;
@@ -153,9 +166,10 @@ private:
         game::Missile missile;
         game::GameData target;
         game::VisualEffect trail;
-        game::Vector seen{};
+        game::Vector seen{}, last{};
         float pace = 0.0f;
         DWORD sampled = 0, fadeUntil = 0;
+        uint32_t shooter = uint32_t(-1);
     };
     struct Moved {
         game::Window window;
@@ -194,10 +208,13 @@ private:
     [[nodiscard]] Barrier* barrierOf(void* combatant);
     bool absorb(void* combatant, int type, float damage, void* attacker);
     static void alert(const Barrier& barrier, void* attacker);
-    void strike(Barrier& barrier, float damage);
+    void strike(Barrier& barrier, float damage, std::optional<game::Vector> at = std::nullopt);
+    void ripple(const Barrier& barrier, const game::Vector& at);
     [[nodiscard]] Barrier* domeAhead(const game::Vector& from, const game::Vector& to, uint32_t shooter);
     [[nodiscard]] static Shooter shooterOf(game::Tool tool);
     void intercept();
+    void repel();
+    void keepOut(game::Ship ship);
     void end(game::VisualEffect effect);
     void clearEnded(DWORD now);
     [[nodiscard]] const Barrier* pointedDome();
@@ -224,10 +241,12 @@ private:
     void weave(DWORD now);
     void moveBursts(DWORD now);
     void command(DWORD now);
+    void dispatch();
+    void recall(game::Ship bomber);
     void fireMissile(Captain& captain, game::GameData target, DWORD now);
     void guide(DWORD now);
     void land(Flight& flight, DWORD now);
-    Captain* captainOf(game::Ship ship);
+    Captain* captainOf(game::Ship ship, bool guest);
     void guardCity(void* combatant, uint32_t politicalId);
     [[nodiscard]] game::City cityOf(game::GameData part) const;
     void releaseAll();
@@ -241,6 +260,8 @@ private:
     int burstCount = 0;
     std::array<Captain, shield::maximumCaptains> captains{};
     int captainCount = 0;
+    std::array<Sortie, shield::maximumSorties> sorties{};
+    int sortieCount = 0;
     std::array<Ward, shield::maximumWards> wards{};
     int wardCount = 0;
     std::array<Flight, shield::maximumMissiles> flights{};
@@ -255,7 +276,8 @@ private:
     int endedCount = 0;
     Plate plate;
     DWORD nextPatrolJump = 0;
-    Clip decoyClip, launchClip;
+    Clip decoyClip;
+    std::array<Clip, size_t(shield::settings.missilesInFlight)> launchClips{};
     void* missileTool = nullptr;
     game::Ship launcher;
     game::GameData aimed;

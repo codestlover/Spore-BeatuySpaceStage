@@ -92,11 +92,30 @@ Hooked<void (*)(void*, void*, const game::Vector*, const game::Vector*)> launchP
     0x1054390, "83ec4c5355568b74245c578bcee82e27"};
 const Function<void(__thiscall*)(void*, float, void*, const game::Vector*)> homeProjectile{
     0xcc09f0, "83ec24535556578b7c243c33ed8bf189"};
+Hooked<void(__thiscall*)(char*, const game::Vector*)> shipMoveTo{0xc3bfd0, "83ec788b44247cf30f1008d94008d940"};
+Hooked<void(__thiscall*)(void*, char*, float)> shipCollisions{0x1060160, "81ec7c040000535556578bf9897c2418"};
+const Function<void(__stdcall*)(char*, const game::Vector*, const game::Vector*, int)> collisionPush{
+    0x105c9a0, "83ec58568b7424608b46348b502c8d4e"};
 const Function<void(__thiscall*)(void*, const game::Vector*)> shipSnapTo{
     0xc3dc40, "568bf1e8e8323e0085c07545578b7c24"};
 Hooked<float(__thiscall*)(void*)> shipTopSpeed{0xc389a0, "51568bf18b861407000083f8047749ff"};
 Hooked<float(__thiscall*)(void*)> shipAcceleration{0xc38a60, "51568bf183be1407000000578b3d68df"};
 
 const Noun ships{0x18ebadc, 0xad4830};
+
+const Function<char* (*)()> missionManager{0xfeb880, "a164ac6d01c3"};
+const Function<char*(__thiscall*)(char*, uint32_t, char*, char*, int)> createMission{
+    0xfec420, "83ec105357e8d60fb5ff8bf833db3bfb"};
+const Function<bool(__thiscall*)(char*, char*)> eventOnPlanet{0xfee020, "53555657e8d7f3b4ff68da5aaa026860"};
+Hooked<void(__cdecl*)(char*, int*, int*, int*, int, int)> raidShips{0xc5c4c0, "83ec0c538b5c2418833b00750d8b4424"};
+Hooked<void(__thiscall*)(char*, void*)> colonyModels{0xff3040, "535556576a108bd9e8531d46ff8b6c24"};
+const Global<const uint32_t> colonyModelTypes{0x15b4df8, "052fe99977773f4e5309c1478191c472"};
+Hooked<void(__cdecl*)(char*, char*, uint32_t, void*, float, float, float, uint32_t, uint32_t)> raidSpawn{
+    0xc5d2f0, "81ec8c0000008b8c24940000008b4104"};
+const Function<void(__thiscall*)(char*, char*)> raidTarget{0xc472e0, "568db1e80100008b0e85c97410c70600"};
+const Function<void(__thiscall*)(char*)> acceptMission{0xc48710, "6a02e809f7ffffc3"};
+const Function<char*(__thiscall*)(char*)> starPlanets{0xbba900, "51578bf9e8a7feffff8b475cc1e806a8"};
+const Function<void(__thiscall*)(char*, char*)> addStarOwnership{0xc34300, "51568b74240c578bf9897c240885f60f"};
+const Function<void(__cdecl*)(char*)> refreshStar{0x102c1b0, "83ec18568b74242056e8e211b1ff8bc8"};
 }
 

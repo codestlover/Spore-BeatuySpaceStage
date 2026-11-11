@@ -5,10 +5,13 @@
 module;
 #include <Windows.h>
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <optional>
+#include <ranges>
+#include <span>
 
 module beatuy.feature.glow;
 
@@ -22,6 +25,7 @@ struct Settings {
     float fadeSeconds = 2.0f, mostLightChange = 4.0f;
     float tintLightShare = 0.5f, tintLightFloor = 0.6f, tintLightCeiling = 2.0f;
     int maximumSide = 2048;
+    size_t mostSides = 32;
 };
 constexpr Settings settings{};
 
@@ -49,6 +53,28 @@ Color tinted(const Color& native, const Color& tint) {
     if (!game::readable(pixel, 4))
         return std::nullopt;
     return Color{pixel[2] / 255.0f, pixel[1] / 255.0f, pixel[0] / 255.0f};
+}
+
+[[nodiscard]] bool fighting() {
+    std::array<uint32_t, settings.mostSides> sides{};
+    size_t count = 0;
+    auto join = [&](uint32_t politicalId) {
+        auto known = std::span(sides).first(count);
+        if (politicalId != uint32_t(-1) && count < sides.size() && std::ranges::find(known, politicalId) == known.end())
+            sides[count++] = politicalId;
+    };
+    join(game::playerPoliticalId());
+    for (game::City city : game::each<game::City>(map::civilization::cities))
+        if (city && city.alive())
+            join(city.politicalId());
+    for (game::Ship ship : game::each<game::Ship>(map::space::ships))
+        if (ship && ship.alive() && ship.kind() != map::identifiers::ShipKind::Escort)
+            join(ship.politicalId());
+    auto present = std::span(sides).first(count);
+    return std::ranges::any_of(std::views::iota(size_t(0), count), [&](size_t first) {
+        return std::ranges::any_of(present.subspan(first + 1),
+                                   [&](uint32_t second) { return game::atWar(present[first], second); });
+    });
 }
 
 float changeRatio(float after, float before) {
@@ -84,19 +110,25 @@ void Glow::probe() {
 }
 
 bool Glow::wanted() {
-    if (game::planetTechnology() != map::identifiers::Technology::Empire)
-        return false;
+    DWORD now = GetTickCount();
+    if (now - war.lastLook >= glow::settings.probeMilliseconds) {
+        war.lastLook = now;
+        war.fought = glow::fighting();
+    }
     uint32_t owner = game::planetOwnerPoliticalId(), player = game::playerPoliticalId();
-    if (owner == uint32_t(-1) || owner == player)
-        return false;
-    probe();
-    return game::relationLevel(owner, player) == game::worstRelation;
+    bool colony =
+        game::planetTechnology() == map::identifiers::Technology::Empire && owner != uint32_t(-1) && owner != player;
+    if (colony)
+        probe();
+    return war.fought || (colony && game::relationLevel(owner, player) == game::worstRelation);
 }
 
 void Glow::onLeavePlanet(bool) {
     defense.secondPending = false;
     defense.calledOnce = false;
     war.level = 0.0f;
+    war.fought = false;
+    war.lastLook = 0;
     defense.bar = false;
 }
 

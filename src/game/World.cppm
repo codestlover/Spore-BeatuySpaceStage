@@ -48,6 +48,8 @@ Vector shipPosition();
 uint32_t playerPoliticalId();
 Empire playerEmpire();
 Empire empireOf(uint32_t politicalId);
+bool groxEmpire(uint32_t politicalId);
+Empire findGrox();
 inline constexpr size_t identityColors = 13;
 size_t identityColor(uint32_t politicalId);
 std::optional<int> addPlayerMoney(int amount);
@@ -140,6 +142,7 @@ bool allied(uint32_t first, uint32_t second);
 float apply(uint32_t who, uint32_t cause, map::identifiers::Relation event, float scale);
 void declareWar(uint32_t enemy, uint32_t player);
 void declarePeace(uint32_t enemy, uint32_t player);
+void startWar(Empire attacker, Empire defender);
 void showMood(City city, float value, const Vector* where = nullptr);
 
 const Key* cultureKey(char* culture, uint32_t slot);
@@ -158,9 +161,16 @@ void citySuperweapon(City city, int ability, const Vector& at);
 void startTimer(Timer timer);
 void stopTimer(Timer timer);
 int empireLevel(Empire empire);
+Array<PlanetRecord*> planetsOf(StarRecord star);
+bool eventOnPlanet(PlanetRecord planet);
+RaidEvent startRaid(map::identifiers::Mission mission, PlanetRecord planet, Empire owner, uint32_t attacker,
+                    int bombers, bool logged);
+void claimStar(StarRecord star, Empire empire);
 void* loadTool(uint32_t identifier);
 bool fireTool(void* tool, GameData source, GameData target);
 bool placeEffect(VisualEffect effect, void* spatial, float scale);
+void destroy(GameData object);
+void placeEffectAt(VisualEffect effect, const Vector& at, const Vector& up, float scale);
 void loadSuperweaponTools(Civilization owner);
 
 uint32_t showEvent(map::identifiers::Popup event, const wchar_t* text, EventClickFunction click,

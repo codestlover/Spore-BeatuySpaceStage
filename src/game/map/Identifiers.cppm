@@ -23,14 +23,17 @@ enum class Type : uint32_t {
     ToolObject = 0x4e3faaf,
     SpaceCamera = 0x303154cc,
     PlanetCamera = 0x303154cd,
+    RaidEvent = 0x3960c0a,
 };
+
+enum class Mission : uint32_t { RaidWar = 0xbbae6b99, RaidAlly = 0xd646c543 };
 
 enum class Mode : uint32_t { Space = 0x1654c05 };
 enum class Context : int { None = -1, Planet = 0, System = 1, Galaxy = 2 };
 enum class Button : int { Left = 1000, Right = 1002 };
 
 enum class Technology : int { None = -1, Tribe = 2, City = 3, Civilization = 4, Empire = 5 };
-enum class ShipKind : int { Player = 0, Escort = 3, Reinforcement = 8 };
+enum class ShipKind : int { Player = 0, Raider = 2, Escort = 3, Bomber = 4, Reinforcement = 8 };
 enum class Atmosphere : int { Red = 1 };
 enum class Order : int { Attack = 1, AttackCity = 2, ConvertCity = 3, Move = 6 };
 enum class Purpose : int { Military = 0, Cultural = 1, Economic = 2 };
@@ -55,6 +58,10 @@ enum class Relation : uint32_t {
     BeNasty = 0x577909b,
     FoughtEnemy = 0x5da8036,
     GoodToolUse = 0x526e56a,
+    MissionCompleted = 0x526e519,
+    MissionFailed = 0x526e51c,
+    MissionRejected = 0x526e51d,
+    MissionAborted = 0x526e51e,
 };
 
 enum class Popup : uint32_t { Group = 0x131a9f54, AlliesArrive = 0xa0c7000a };

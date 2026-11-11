@@ -44,10 +44,6 @@ using map::identifiers::Purpose;
     return low + DWORD(rand()) % (high - low + 1);
 }
 
-[[nodiscard]] float between(float low, float high) {
-    return low + (high - low) * float(rand()) / float(RAND_MAX);
-}
-
 [[nodiscard]] float decibels(float level) {
     return std::pow(10.0f, level / 20.0f);
 }
@@ -145,16 +141,16 @@ void Radio::voice(uint32_t line, game::Vehicle vehicle) {
         .repeats = sticks ? settings.stickFewest + rand() % (settings.stickMost - settings.stickFewest + 1) : 0,
         .vehicle = vehicle,
         .weakness = reception.weakest,
-        .offset = between(-reception.jitter, reception.jitter)};
+        .offset = game::between(-reception.jitter, reception.jitter)};
     transmission.weakness = weaknessOf(transmission);
     transmission.cutoff = reception.clearCutoff - reception.cutoffLoss * transmission.weakness;
     for (float& period : transmission.fadePeriods)
         period = float(within(reception.fadeShortest, reception.fadeLongest)) / 1000.0f;
     for (float& phase : transmission.fadePhases)
-        phase = between(0.0f, 2.0f * std::numbers::pi_v<float>);
+        phase = game::between(0.0f, 2.0f * std::numbers::pi_v<float>);
     game::setAudioProperty(track, AudioProperty::LowPass, transmission.cutoff);
     game::setAudioProperty(track, AudioProperty::RingFrequency,
-                           between(reception.flutterSlowest, reception.flutterFastest));
+                           game::between(reception.flutterSlowest, reception.flutterFastest));
     vehicle.addReference();
     *free = transmission;
 }
@@ -283,8 +279,8 @@ float Radio::channelGain(DWORD now) {
         loudest = std::max(loudest, tune(transmission, now));
         weakest = std::max(weakest, transmission.weakness);
     }
-    bool crashes = between(0.0f, 1.0f) < reception.crashChance * weakest;
-    float level = loudest + (crashes ? between(reception.crashLeast, reception.crashMost) : 0.0f);
+    bool crashes = game::between(0.0f, 1.0f) < reception.crashChance * weakest;
+    float level = loudest + (crashes ? game::between(reception.crashLeast, reception.crashMost) : 0.0f);
     return reception.hissUnity * decibels(std::min(level, reception.hissCeiling));
 }
 
@@ -295,7 +291,7 @@ float Radio::tune(Transmission& transmission, DWORD now) {
                          transmission.fadePhases[index]);
     float fading = std::pow(std::clamp(0.5f + wave / reception.fadeSpread, 0.0f, 1.0f), reception.fadeCurve);
     bool rested = LONG(now - transmission.dropUntil) >= LONG(reception.dropGapSteps * reception.stepMilliseconds);
-    if (rested && between(0.0f, 1.0f) < reception.dropChance * std::pow(weakness, reception.dropCurve))
+    if (rested && game::between(0.0f, 1.0f) < reception.dropChance * std::pow(weakness, reception.dropCurve))
         transmission.dropUntil = now + within(reception.dropShortest, reception.dropLongest);
     bool dropped = LONG(now - transmission.dropUntil) < 0;
     float faded = -reception.fadeDepth * weakness * fading;

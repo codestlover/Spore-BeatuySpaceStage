@@ -18,7 +18,6 @@ import beatuy.game;
 
 namespace feature {
 namespace {
-using map::identifiers::Archetype;
 using map::identifiers::ShipKind;
 using map::identifiers::Technology;
 
@@ -32,13 +31,8 @@ float __cdecl keepCalledShips(void* ship, uint32_t lowTime, uint32_t highTime, u
     return reinforcementLeaves(ship, lowTime, highTime, flags, fifthArgument, sixthArgument, decider, state);
 }
 
-[[nodiscard]] bool groxEmpire(uint32_t politicalId) {
-    game::Empire empire = game::empireOf(politicalId);
-    return empire && empire.archetype() == Archetype::Grob;
-}
-
 [[nodiscard]] bool unfriendly(uint32_t politicalId) {
-    return game::empireOf(politicalId) && !groxEmpire(politicalId) &&
+    return game::empireOf(politicalId) && !game::groxEmpire(politicalId) &&
            game::relationLevel(politicalId, game::playerPoliticalId()) < game::neutralRelation;
 }
 }
@@ -96,7 +90,7 @@ void* Hunt::targetFor(void* ship, bool distant, void* found) const {
 void Hunt::spot(std::span<char* const> escort) {
     auto isGrox = [](char* member) {
         game::Ship ship(member);
-        return ship.canFight() && groxEmpire(ship.politicalId());
+        return ship.canFight() && game::groxEmpire(ship.politicalId());
     };
     auto found = std::ranges::find_if(escort, isGrox);
     game::Ship seen(found != escort.end() ? *found : nullptr);
