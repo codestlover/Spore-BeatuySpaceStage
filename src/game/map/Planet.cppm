@@ -17,6 +17,8 @@ const Function<game::Vector*(__thiscall*)(char*, game::Vector*, const game::Vect
     0xb81780, "568b74240c57568bf9"};
 const Function<bool(__thiscall*)(char*, const game::Vector*)> inWater{0xb7e530, "568bf1837e2400743f8b4e248b442408"};
 const Function<float(__thiscall*)(void*)> gravity{0xb7e5e0, "e82bd3fdff3d104c65017507d9057082"};
+const Function<void(__thiscall*)(char*, const game::Vector*, float, uint32_t, void*)> nearbyObstacles{
+    0xb7a320, "81ec60040000568bf18b86a45500008b"};
 
 const Location terrainStateManager{0xfa0d20};
 const Location terrainProperties{0x641760, "8b4128c3"};

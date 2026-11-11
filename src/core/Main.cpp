@@ -27,6 +27,7 @@ namespace planet = map::planet;
 namespace civilization = map::civilization;
 namespace tribe = map::tribe;
 namespace saving = map::saving;
+namespace userInterface = map::userInterface;
 using map::identifiers::Context;
 
 Mod& mod() {
@@ -398,6 +399,30 @@ float __fastcall shipAccelerationHook(void* ship, void*) {
     return space::shipAcceleration.callOriginal(ship) * mod().shield.accelerationOf(ship);
 }
 
+void __stdcall liftOverGroundHook(char* ship, const game::Vector* point, float clearance) {
+    space::liftOverGround.callOriginal(ship, point, clearance);
+    mod().travel.onLift(ship, point, clearance);
+}
+
+bool __cdecl formationTickHook(void* ship, uint32_t lowTime, uint32_t highTime, uint32_t flags, uint32_t parameter,
+                               float* state, void* selection, float elapsed) {
+    bool kept = space::formationTick.callOriginal(ship, lowTime, highTime, flags, parameter, state, selection, elapsed);
+    if (kept)
+        mod().travel.onFormation(static_cast<char*>(ship));
+    return kept;
+}
+
+void __fastcall commHeaderHook(void* screen, void*, uint32_t politicalId, uint32_t planet, uint32_t third,
+                               uint32_t fourth, uint32_t fifth, uint32_t sixth, uint32_t seventh, uint32_t eighth) {
+    userInterface::commHeader.callOriginal(screen, politicalId, planet, third, fourth, fifth, sixth, seventh, eighth);
+    mod().colony.onContact(screen, politicalId);
+}
+
+void __fastcall commUnloadHook(void* screen, void*) {
+    mod().colony.onContactUnload();
+    userInterface::commUnload.callOriginal(screen);
+}
+
 int __fastcall rallyCallHook(void* strategy, void*, void* tool, const void* aim, int flag) {
     const int result = space::rallyCallFire.callOriginal(strategy, tool, aim, flag);
     mod().orders.onRallyCall();
@@ -439,6 +464,10 @@ int installAll() {
         install(space::launchProjectile, &launchProjectileHook),
         install(space::shipTopSpeed, &shipTopSpeedHook),
         install(space::shipAcceleration, &shipAccelerationHook),
+        install(space::liftOverGround, &liftOverGroundHook),
+        install(space::formationTick, &formationTickHook),
+        install(userInterface::commHeader, &commHeaderHook),
+        install(userInterface::commUnload, &commUnloadHook),
         install(space::shipHostile, &shipHostileHook),
         install(space::nearestHostileShip, &nearestHostileHook),
         install(tribe::spearUpdate, &spearUpdateHook),

@@ -58,6 +58,11 @@ const Function<BehaviourTickFunction> roseTick{0xdbfa60, "83ec4053568b742460578b
 const Location roseEscortGate{0xdbfbb8, "0f8447020000e83dc123008bc8e806c6"};
 const Global<void*> escortRoseBehaviour{0x159e880, "70d65901"};
 const Global<void*> roseBehaviour{0x159d670, "6c25870550f9db0060fadb00c0eedb00"};
+Hooked<BehaviourTickFunction> formationTick{0xdc1870, "83ec54568b74245c83be8c0600000075"};
+Hooked<void(__stdcall*)(char*, const game::Vector*, float)> liftOverGround{0x105c7b0,
+                                                                           "83ec0c8b44241456508d4c240851e88d"};
+const Function<float(__thiscall*)(char*)> shipRadius{0xc3bf70, "83ec0cf30f104178f30f5c416cf30f10"};
+const Global<char*> shipTuning{0x168df68};
 Hooked<bool(__cdecl*)(void*, void*, bool)> shipHostile{0x102aa60, "51578b7c240c85ff74128b078b502c8b"};
 Hooked<void*(__cdecl*)(void*, bool, bool)> nearestHostileShip{0x102bca0, "83ec148b0d18755b010f57c0f30f1144"};
 const Global<char*> simulatorUniverse{0x16dc798};

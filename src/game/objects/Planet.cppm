@@ -3,6 +3,8 @@
 // Sheroll Non-Commercial License 1.0: see LICENSE in the project root.
 
 module;
+#include <array>
+#include <cstddef>
 #include <cstdint>
 #include <span>
 
@@ -171,5 +173,45 @@ public:
         return reference<Terrain>(0x24);
     }
 };
+
+class Obstacle : public View {
+public:
+    using View::View;
+    bool ignored() const {
+        return (at<uint32_t>(0x34) & 1u) != 0;
+    }
+    const Vector& base() const {
+        return at<Vector>(0x38);
+    }
+    float baseRadius() const {
+        return at<float>(0x44);
+    }
+    float canopyRadius() const {
+        return at<float>(0x48);
+    }
+    float height() const {
+        return at<float>(0x4c);
+    }
+};
+
+struct ObstacleList {
+    ObstacleList() {
+        first = last = entries.data();
+        capacity = entries.data() + entries.size();
+    }
+    ObstacleList(const ObstacleList&) = delete;
+    ObstacleList& operator=(const ObstacleList&) = delete;
+
+    Array<Obstacle*> found() const {
+        return Array<Obstacle*>(reinterpret_cast<char*>(first), reinterpret_cast<char*>(last));
+    }
+
+    char** first = nullptr;
+    char** last = nullptr;
+    char** capacity = nullptr;
+    std::array<uint32_t, 3> growth{};
+    std::array<char*, 256> entries{};
+};
+static_assert(offsetof(ObstacleList, growth) == 0xc && offsetof(ObstacleList, entries) == 0x18);
 }
 

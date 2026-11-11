@@ -563,7 +563,7 @@ void Shield::command(DWORD now) {
         captains[i] = captains[--captainCount];
     }
     for (game::Ship ship : game::each<game::Ship>(map::space::ships)) {
-        if (!ship || !ship.alive() || ship.politicalId() != owner)
+        if (!ship || !ship.alive() || ship.politicalId() != owner || game::playerSide(ship.fighter().raw()))
             continue;
         game::Combatant fighter = ship.fighter();
         void* target = fighter.target();

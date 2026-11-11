@@ -8,7 +8,7 @@ defend themselves, hold grudges and fight wars of their own, tribes throw spears
 open fire at once under a red sky, and a new colony tool tints a planet's atmosphere in any colour. Everything is built
 on the game's own systems: its behaviour trees, relation events, voice lines, effects and interface art.
 
-Current version: **1.1.0**. Download `BeatuySpaceStage.sporemod` from the [Releases](../../releases) page.
+Current version: **1.2.0**. Download `BeatuySpaceStage.sporemod` from the [Releases](../../releases) page.
 
 ## What it changes
 
@@ -261,8 +261,13 @@ before their time when that store runs out. Your own shield tool is unchanged.
   the same bar for what is left of the dome.
 - Shields, domes and their waits stand still while the game is paused.
 
+**Every empire's level in the communication screen.** When you talk to an empire, the communication screen's header
+shows its level with the game's own star badge, the one its planets' tooltips show. The mood face moves a little to
+the left, and the star stands beside it, a little apart, on the same line.
+
 **The strongest empires defend their colonies.** An empire of the highest level (level 5, by the game's own measure
-of its size and reach, which also picks its ships' weapons) fights harder over its own colonies:
+of its size and reach, which also picks its ships' weapons) fights harder over its own colonies. Its ships in your
+escort stay ordinary escort ships:
 - **Homing missiles.** Each of its ships fighting you or your escort launches a *Super High-Load Missile* every
   6 seconds, within 400, with at most three in the air at once. A missile trails its empire's colour, flies a third
   faster than its target moves, and turns tighter as it closes in.
@@ -322,6 +327,16 @@ colony does.
   - **The rush.** While a quick exit lasts, streaks of cold light fly out past the edges of the screen at a steady
     pace, and a warp sound holds for as long as they do. Asking again within about a second (another press, or the
     wheel still turning) carries the same rush on through the next leg of the flight.
+- **Ships fly over rocks and hills.** On a planet the game lifts a ship only over the ground right under it, so a ship
+  flying low ran into slopes and big rocks and kept bouncing off them. Every ship but yours now also looks ahead:
+  - along its course and toward where it is flying, as far as it flies in 1.5 seconds (160 to 500 units, and never
+    more than 0.8 radian around the planet);
+  - at the ground there and at the rocks and other obstacles the game makes ships bounce off, with the game's own
+    collision shapes and room for the ship's size (trees, which ships fly through, are left out).
+
+  The game's own lift then raises the ship in time, starting gently, half a unit up for each unit still ahead. An
+  escort ship in formation, which the game places at its slot without any collision, is kept above the ground and the
+  rocks the same way.
 - **Your weapons no longer lock on or fire at your escort.**
 - **The area repair skips ships that have left your escort.** Such a ship stays near you as its empire's defender. It
   is no longer healed, so its thanks no longer fill the radio.
@@ -329,7 +344,8 @@ colony does.
 ## What it does not change
 
 - **Nothing outside the space stage.** In other stages every hook passes straight through.
-- **An escort on *Free*** behaves exactly as in vanilla. In space, formation and flight stay the game's.
+- **An escort on *Free*** behaves as in vanilla, except that on a planet it flies over rocks and hills like every other
+  ship. In space, formation and flight stay the game's.
 - **No new fights.** Orders never make the escort open fire on anything that is not already hostile.
 - **Planet data.** No planet's atmosphere type, gradient or terrain is changed. Both glows are applied as the frame is
   drawn.
@@ -411,9 +427,9 @@ and the load order decides which list wins.
 The DLL is loaded by the Spore ModAPI Launcher Kit, but contains no Spore ModAPI code. It finds `SporeModAPI.dll`,
 registers a post-init callback, and starts once the game is up.
 
-- **The map of the game.** Every address the mod uses is listed in one map (`src/game/map`), 233 entries in all.
-  159 of them carry the bytes expected there, and those bytes are checked at start-up or when the hook is placed.
-- **Hooks.** The mod places 52 hooks: 26 virtual-table slots and 26 code detours (Microsoft Detours). It also makes
+- **The map of the game.** Every address the mod uses is listed in one map (`src/game/map`), 243 entries in all.
+  168 of them carry the bytes expected there, and those bytes are checked at start-up or when the hook is placed.
+- **Hooks.** The mod places 56 hooks: 26 virtual-table slots and 30 code detours (Microsoft Detours). It also makes
   four byte-level changes:
   - one 4-byte jump patch and one behaviour-record swap let the escort's rose take the mod's targets;
   - one decision of the ships' behaviour tree is swapped for the mod's, so that ships called in from another empire
@@ -424,7 +440,7 @@ registers a post-init callback, and starts once the game is up.
 | Game system | Hooks |
 | --- | --- |
 | Space game mode | Update, Exit and MouseDown slots; the system and planet cameras' mouse wheel |
-| Ship | Combatant TakeDamage, AddHostileUnit, IsInRange and SetTarget slots; the set-target-in-range-band call of the behaviour trees; the top speed and the acceleration; the check whether one ship is hostile to another; the search for the nearest enemy ship |
+| Ship | Combatant TakeDamage, AddHostileUnit, IsInRange and SetTarget slots; the set-target-in-range-band call of the behaviour trees; the top speed and the acceleration; the check whether one ship is hostile to another; the search for the nearest enemy ship; the lift of a ship's flight over the ground; the escort formation's tick |
 | Space simulation | The space game simulator's Update; the player ship record's Write and Read |
 | Tools | The tool target check; FireTool; the place-object tool's Update; the area repair's and the Rally Call's WhileFiring; a placed tool object's minimap mark and model view; the tool object rollover's colour (a redirected call); the launch of a tool's projectile; a beam's view Update |
 | Combat and flow | The missile turret's WhileFiring and the defence missile's launch; base combatant TakeDamage; leaving the planet; the player ship destroyed; a city's capture |
@@ -432,6 +448,7 @@ registers a post-init callback, and starts once the game is up.
 | Tribe | Spear projectile update; the panic and cower behaviour ticks |
 | Planet rendering | Atmosphere colour and the light on models (`cTerrainStateMgr`); the star-system picture bake |
 | Localization | The locale table text lookup |
+| Communication screen | The fill of the space communication screen's header; the unload of the screen |
 | Audio | The seek of a sound's request and the EALayer3 decoder's skip of whole granules, so that a line can be started from its middle |
 | Escort rose | The rose's escort gate (one `je` redirected); the escort's behaviour node 3 gets the mod's copy of its record |
 

@@ -45,6 +45,12 @@ const Function<char*(__thiscall*)(char*)> layoutConstructor{0x8100a0, "8bc133c98
 const Function<bool(__thiscall*)(char*, const char16_t*, uint32_t, bool, uint32_t)> layoutLoadByName{
     0x812250, "83ec0c33c05689442404894424088944"};
 const Function<char*(__thiscall*)(char*)> standardDrawableConstructor{0x988350, "f30f1005cc263f01568bf1c74604404c"};
+using CommHeaderFunction =
+    void(__thiscall*)(void*, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t);
+Hooked<CommHeaderFunction> commHeader{0xdd4ab0, "83ec38535556578bf1e8f2c624008b4e"};
+Hooked<void(__thiscall*)(void*)> commUnload{0xdd3cc0, "53568bf133db385e407405e890f3ffff"};
+const Function<char* (*)()> commManager{0xb3d5a0, "a144eb6701c3"};
+const Function<bool(__thiscall*)(char*)> commScreenActive{0xae9310, "837920007546e85597510085c07421e8"};
 
 const Function<char* (*)()> spaceGameInterface{0x10666b0, "e8bbc3f9ff85c074048b4014c333c0c3"};
 

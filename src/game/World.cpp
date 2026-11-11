@@ -376,6 +376,28 @@ Vector ground(const Vector& point) {
     return finite(out) ? out : point;
 }
 
+std::optional<Vector> surfaceUnder(const Vector& point) {
+    char* model = application::planetModel();
+    if (!model)
+        return std::nullopt;
+    Vector out = point;
+    planet::toSurface(model, &out, &point);
+    return finite(out) ? std::optional(out) : std::nullopt;
+}
+
+bool findObstacles(const Vector& at, float radius, uint32_t kinds, ObstacleList& list) {
+    char* manager = application::obstacleManager();
+    if (!manager || !field<char*>(manager, 0x55a4) || !application::planetModel())
+        return false;
+    planet::nearbyObstacles(manager, &at, radius, kinds, &list);
+    return true;
+}
+
+float groundClearance() {
+    char* tuning = *space::shipTuning;
+    return tuning ? field<float>(tuning, 0xc) : 0.0f;
+}
+
 bool inWater(const Vector& at) {
     char* model = application::planetModel();
     return model && planet::inWater(model, &at);
@@ -704,6 +726,22 @@ void* loadPicture(const Key& picture) {
 void releasePicture(void* image) {
     if (image)
         callVirtual<int>(image, 0x4);
+}
+
+bool conversing() {
+    char* manager = userInterface::commManager();
+    return manager && userInterface::commScreenActive(manager);
+}
+
+Layout newLayout(const char* name) {
+    constexpr uint32_t layoutTable = 0x01418360;
+    char* memory = application::allocate(Layout::byteSize, name, 0, 0, nullptr, 0);
+    char* made = memory ? userInterface::layoutConstructor(memory) : nullptr;
+    if (!made || gameAddress(virtualTable(made)) != layoutTable)
+        return Layout();
+    Layout layout(made);
+    layout.addReference();
+    return layout;
 }
 
 StandardDrawable newPictureLook(void* image) {

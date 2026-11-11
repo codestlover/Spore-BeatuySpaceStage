@@ -18,6 +18,8 @@ import beatuy.game.memory;
 export namespace game {
 struct Rectangle {
     float left, top, right, bottom;
+
+    friend constexpr bool operator==(const Rectangle&, const Rectangle&) = default;
 };
 
 class InterfaceImage : public View {
@@ -102,6 +104,9 @@ public:
     void release() const {
         call<int>(0x4);
     }
+    char* cast(uint32_t type) const {
+        return object ? call<char*>(0xc, type) : nullptr;
+    }
     Window parent() const {
         return Window(call<char*>(0x10));
     }
@@ -150,6 +155,9 @@ public:
     void add(Window child) const {
         call<void>(0xd8, child.raw());
     }
+    void remove(Window child) const {
+        call<void>(0xdc, child.raw());
+    }
     void dispose(Window child) const {
         call<void>(0xe0, child.raw());
     }
@@ -177,6 +185,22 @@ public:
     }
 };
 
+class AnimatedIcon : public View {
+public:
+    using View::View;
+    static constexpr uint32_t interfaceType = 0x0105a93d;
+    static AnimatedIcon of(Window window) {
+        return AnimatedIcon(window.cast(interfaceType));
+    }
+    int frames() const {
+        return object ? call<int>(0x10) : 0;
+    }
+    void show(int frame) const {
+        if (object)
+            call<bool>(0x14, frame);
+    }
+};
+
 class Layout : public View {
 public:
     using View::View;
@@ -192,6 +216,15 @@ public:
     }
     Window findWindow(uint32_t control) const {
         return Window(object ? map::userInterface::findWindow(object, control, true) : nullptr);
+    }
+};
+
+class CommScreen : public View {
+public:
+    using View::View;
+    static constexpr uint32_t moodControl = 0x04a4504f;
+    Layout layout() const {
+        return reference<Layout>(0xc);
     }
 };
 

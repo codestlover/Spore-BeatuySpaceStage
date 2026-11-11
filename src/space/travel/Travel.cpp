@@ -100,5 +100,13 @@ void Travel::tick() {
     zoomed = true;
     deadline = now + settings.enterMilliseconds;
 }
+
+void Travel::onLift(char* ship, const game::Vector* point, float clearance) const {
+    flight.onLift(ship, point, clearance);
+}
+
+void Travel::onFormation(char* ship) const {
+    flight.onFormation(ship);
+}
 }
 

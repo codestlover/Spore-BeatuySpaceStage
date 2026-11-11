@@ -8,6 +8,7 @@ module;
 
 export module beatuy.feature.colony;
 
+export import :contact;
 import beatuy.game;
 
 namespace feature {
@@ -19,6 +20,8 @@ struct ColonySettings {
 export class Colony {
 public:
     void tick();
+    void onContact(void* screen, uint32_t politicalId);
+    void onContactUnload();
 
 private:
     static constexpr ColonySettings settings{};
@@ -26,6 +29,7 @@ private:
     int aimTurrets(game::Ship ship, uint32_t player);
 
     DWORD nextAim = 0;
+    Contact contact;
 };
 }
 

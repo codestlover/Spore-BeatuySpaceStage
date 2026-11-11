@@ -115,6 +115,9 @@ private:
 float changeEnergy(Ship ship, float delta);
 
 Vector ground(const Vector& point);
+std::optional<Vector> surfaceUnder(const Vector& point);
+bool findObstacles(const Vector& at, float radius, uint32_t kinds, ObstacleList& list);
+float groundClearance();
 bool inWater(const Vector& at);
 Terrain planetTerrain();
 TerrainState activeTerrainState();
@@ -173,6 +176,8 @@ void startAudio(int track);
 Window newOverlay(const Rectangle& area);
 void* loadPicture(const Key& picture);
 void releasePicture(void* image);
+bool conversing();
+Layout newLayout(const char* name);
 StandardDrawable newPictureLook(void* image);
 }
 

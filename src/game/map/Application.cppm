@@ -15,6 +15,7 @@ export namespace map::application {
 const Function<void* (*)()> gameModeManager{0x67dcd0, "a1b0d85f01c3"};
 const Function<void* (*)()> gameViewManager{0xb3d340, "a1c4ea6701c3"};
 const Function<char* (*)()> planetModel{0xb3d450, "a1f8ea6701c3"};
+const Function<char* (*)()> obstacleManager{0xb3d4c0, "a114eb6701c3"};
 const Function<void* (*)()> nounManager{0xb3d400, "a1e0ea6701c3"};
 const Function<char* (*)()> timeManager{0xb3d480, "a104eb6701c3"};
 const Function<void* (*)()> messageManager{0x67dc80, "a190d85f01c3"};

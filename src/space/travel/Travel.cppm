@@ -7,6 +7,7 @@ module;
 
 export module beatuy.feature.travel;
 
+export import :flight;
 import beatuy.game;
 
 namespace feature {
@@ -20,6 +21,8 @@ export class Travel {
 public:
     void onMouseDown(int button);
     void tick();
+    void onLift(char* ship, const game::Vector* point, float clearance) const;
+    void onFormation(char* ship) const;
 
 private:
     struct Click {
@@ -38,6 +41,7 @@ private:
     map::identifiers::Context armedContext = map::identifiers::Context::None;
     DWORD deadline = 0;
     bool zoomed = false;
+    Flight flight;
 };
 }
 

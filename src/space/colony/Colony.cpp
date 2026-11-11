@@ -38,7 +38,16 @@ int Colony::aimTurrets(game::Ship ship, uint32_t player) {
     return aimed;
 }
 
+void Colony::onContact(void* screen, uint32_t politicalId) {
+    contact.onHeader(screen, politicalId);
+}
+
+void Colony::onContactUnload() {
+    contact.onUnload();
+}
+
 void Colony::tick() {
+    contact.tick();
     if (!game::onPlanet() || game::planetTechnology() != map::identifiers::Technology::Empire)
         return;
     game::Ship ship = game::playerShip();

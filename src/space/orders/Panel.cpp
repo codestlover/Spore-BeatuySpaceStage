@@ -33,7 +33,7 @@ struct Settings {
     int pillWidth = 45, pillHeight = 22;
     uint32_t textWindowTable = 0x014453b0;
     const char16_t* tooltipLayout = u"Tooltips";
-    uint32_t layoutGroup = 0x40464100, tooltipLayer = 0x05b598f6, layoutTable = 0x01418360;
+    uint32_t layoutGroup = 0x40464100, tooltipLayer = 0x05b598f6;
     int tooltipFrameWidth = 50, tooltipFrameHeight = 20;
     uint32_t stoneHolder = 0x056cec38;
     int stoneSide = 44;
@@ -279,13 +279,7 @@ void releaseLook(NativeLook& look) {
 
 TooltipFrame borrowTooltipFrame() {
     TooltipFrame tooltip{.tried = true};
-    char* memory = map::application::allocate(game::Layout::byteSize, "UI/Tooltip Layout", 0, 0, nullptr, 0);
-    char* made = memory ? map::userInterface::layoutConstructor(memory) : nullptr;
-    const uint32_t layoutTable = tableOf(made);
-    if (layoutTable == settings.layoutTable) {
-        tooltip.layout = game::Layout(made);
-        tooltip.layout.addReference();
-    }
+    tooltip.layout = game::newLayout("UI/Tooltip Layout");
     const bool loaded =
         tooltip.layout.load(settings.tooltipLayout, settings.layoutGroup, false, settings.tooltipLayer);
     const game::Window text = loaded ? tooltip.layout.findWindow(game::Tooltip::textControl) : game::Window();

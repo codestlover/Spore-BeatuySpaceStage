@@ -55,6 +55,18 @@ public:
     float& flightRadius() const {
         return at<float>(0x768);
     }
+    float radius() const {
+        return map::space::shipRadius(object);
+    }
+    Vector& location() const {
+        return at<Vector>(0x718);
+    }
+    Vector& destination() const {
+        return at<Vector>(0x750);
+    }
+    bool& kinematic() const {
+        return at<bool>(0x691);
+    }
     float& speedFactor() const {
         return at<float>(0x6b4);
     }
