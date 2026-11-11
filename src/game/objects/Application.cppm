@@ -66,11 +66,36 @@ public:
     void stop() const {
         call<bool>(0xc, 0);
     }
+    void halt() const {
+        call<bool>(0xc, 1);
+    }
     void setSourceTransform(const void* transform) const {
         call<int>(0x18, transform);
     }
     void release() const {
         call<int>(0x4);
+    }
+};
+
+class AudioPlayer : public View {
+public:
+    using View::View;
+    static constexpr uint8_t layerThreeCodec = 5, inMemory = 0;
+
+    [[nodiscard]] bool playsLayerThreeFromMemory(uint32_t request) const {
+        char* streams = object ? at<char*>(0x58) : nullptr;
+        char* stream = streams ? streams + request * 0x50 : nullptr;
+        return stream && field<uint8_t>(stream, 0x49) == inMemory && field<uint8_t>(stream, 0x48) == layerThreeCodec;
+    }
+};
+
+class LayerThreeDecoder : public View {
+public:
+    using View::View;
+    [[nodiscard]] bool lacksGranuleSizes() const {
+        char* slot = object + at<int32_t>(0x24) + at<uint8_t>(0x31) * 0x14;
+        bool sized = field<int32_t>(slot, 0xc) != 0 && field<void*>(slot, 0x4) != nullptr;
+        return at<uint8_t>(0x54) == 0 && at<uint8_t>(0x55) != 0 && !sized;
     }
 };
 

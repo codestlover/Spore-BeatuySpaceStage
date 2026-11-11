@@ -8,7 +8,7 @@ defend themselves, hold grudges and fight wars of their own, tribes throw spears
 open fire at once under a red sky, and a new colony tool tints a planet's atmosphere in any colour. Everything is built
 on the game's own systems: its behaviour trees, relation events, voice lines, effects and interface art.
 
-Current version: **1.0.1**. Download `BeatuySpaceStage.sporemod` from the [Releases](../../releases) page.
+Current version: **1.1.0**. Download `BeatuySpaceStage.sporemod` from the [Releases](../../releases) page.
 
 ## What it changes
 
@@ -22,6 +22,8 @@ Each ship of your escort (the allies in the **Allies** panel) takes its own orde
 - **Choosing an order.** Click the pill for the menu of five orders, in the game's tooltip frame.
   - The menu closes on a pick, a second click on the pill, Escape, a click on the world, or the drawer closing.
   - *Protect others…* opens a list of the other escort ships, each with its design picture, plus **All**.
+  - While the menu is open, the game's own yellow hint arrow, the one its tutorials point at buttons with, stands at
+    the menu's edge level with the ship's cube and points at the menu, turned by the game's own rotate effect.
 - Ships from **Call for Backup** belong to your own empire. They take no orders and get no pill.
 
 | Order | What the ship does |
@@ -95,6 +97,8 @@ On planets in the **City and Civilization** technology levels, the cities and th
   turrets at it and send more units, at most once every 30 seconds.
 - **Attacked city halls are remembered** for the session. That city defends itself again whenever you come back.
 - **Turrets and units target the nearest of your ship and your escort.**
+- **Missile turrets keep at most 3 homing missiles in the air** for each civilization or empire, so a city answers
+  with a few missiles, not a swarm.
 
 **How their units fight**
 
@@ -177,6 +181,27 @@ On planets in the **City and Civilization** technology levels, the cities and th
   engaging, holding, moving, under fire, damage reports and the bribe lines.
 - Only the 16 nearest vehicles within range are heard. There is at most one line every half second, and at most one
   per unit every 3 seconds.
+- **Bad reception.** The spoken lines sometimes come through badly, each of these four times in ten, apart from the
+  other, so a line can do both:
+  - it **jams**: the line starts over two or three times, a tenth of a second or so apart, before it gets through;
+  - it **sticks**: a tenth of a second somewhere in its spoken middle repeats two or three times more, as on a
+    scratched record, and the line then goes on to its end.
+
+  Both are the game's own recording said again on the line's own sound, with no recordings of the mod's: a jam starts
+  the line over, a stick starts it again from the piece, with the game's own seek.
+- **Reception.** Each line comes through as over a short-wave set: the farther the vehicle (within the 250 units
+  the radio hears), the weaker its signal. The distance is followed while the line is said, so if your ship and the
+  vehicle draw apart mid-line the reception worsens as they go, and clears as they close in.
+  - The voice is muffled by the game's own low-pass filter on every voice (3.5 kHz for a near vehicle, down to
+    about 1.5 kHz for a far one at the bottom of a fade).
+  - It fades in and out over 0.7 to 2.5 s, up to 18 dB for the weakest, and now and then drops out for 40 to 160 ms.
+  - A far vehicle's voice also flutters at 9 to 16 Hz, through the game's own ring modulator.
+  - Under it runs a steady hiss, a sound of the game's own (#945B4D7D from Galactic Adventures), heard in the head
+    rather than from a place: 33 dB under the speech for the nearest vehicle and about 19 dB for the farthest. It
+    swells as the voice fades or drops, and now and then a crash of static bursts through, but it never comes nearer
+    the speech than 8 dB. It starts with the first line on the air and dies away over 0.7 s after the last, going on
+    unbroken if another line starts meanwhile.
+  - The muffling needs the game's audio quality above its lowest; the rest works at any setting.
 
 ### Tribes
 
@@ -199,10 +224,64 @@ On planets of spacefaring empires:
   after a declaration of war. Now every idle turret of an empire at war with you takes your ship as its target within
   half a second.
 - **The red sky of war.**
-  - On another empire's colony, the atmosphere fades to red while the game's planet capture bar is showing, and for
-    5 seconds after reinforcements are called over the planet.
+  - On another empire's colony, the atmosphere fades to red while that empire's relation to you is at its worst:
+    the lowest of the game's relation levels, the one with the red face.
   - When the capture bar first appears, the game's defence squads are called twice, at most once a minute.
   - The red never reaches the save or the planet's picture in the star system.
+
+### A Grox in your escort
+
+No empire will stand a Grox. While a Grox ship flies in your escort, the colony of an empire whose relation to you
+is below neutral turns on you as you fly over it, at war with you or not:
+
+- **The Grox first.** The colony's ships and turrets go for the Grox ship while they can reach it, then for your
+  ship, then for the rest of your escort. Once it has begun, the hunt lasts until you leave the planet, whether the
+  Grox lives or not.
+- **Only the hunters change.** The colony's ships take you and your escort for enemies in their own choice of
+  targets alone. For your weapons and your escort they stay what the game makes of them, so nothing of yours opens
+  fire on them unless you or the game start a fight.
+- **Help from the neighbours.** As the hunt begins, the colony calls for help from every other empire whose relation
+  to you is below neutral and that holds a star within 20 of this system, about the size of an empire in the game's
+  galaxy. Each sends the squad the game itself sends as reinforcements, its ships coming from its stars within that
+  reach. They hunt in the same order and stay while the hunt lasts.
+
+### Shields and the strongest empires
+
+**Shields can be broken.** The shields the strongest empires raise (see below) hold a store of strength, and give way
+before their time when that store runs out. Your own shield tool is unchanged.
+- A ship's shield holds one and a half times the ship's maximum health.
+- It cracks as it loses its first and its second third, each time with a cold flash, sparks and the sound of a crack.
+- When it breaks, it bursts into shards with a louder crack, and the next hits reach the hull.
+- A shield hums, and the hum is heard only near it: every shielded ship and every domed city has its own.
+- Hovering the cursor over a shielded ship adds a shield row to its rollover, above the health row: a shield icon
+  drawn in the style of the rollover's own health cross, and the rollover's own blue bar in the health bar's track,
+  filled to what is left of the shield. The rollover grows to make room for it, and the health stays shown, since
+  these shields do not make anything invulnerable.
+- Pointing anywhere at a city's dome shows a plate above the city, in the rollover's style, with the same icon and
+  the same bar for what is left of the dome.
+- Shields, domes and their waits stand still while the game is paused.
+
+**The strongest empires defend their colonies.** An empire of the highest level (level 5, by the game's own measure
+of its size and reach, which also picks its ships' weapons) fights harder over its own colonies:
+- **Homing missiles.** Each of its ships fighting you or your escort launches a *Super High-Load Missile* every
+  6 seconds, within 400, with at most three in the air at once. A missile trails its empire's colour, flies a third
+  faster than its target moves, and turns tighter as it closes in.
+- **Agile ships.** Those ships fly half again as fast and gather speed two and a half times as quickly.
+- **Jumps.** A ship you fire a Proton Missile at will, four times out of five, jump aside in a flash and leave a
+  decoy behind for the missile, which flies on without its lock. A missile that still passes near where the ship
+  lands picks it up again. A jump under a shield costs the shield 2 % of its strength. Ships with nothing to fight
+  now and then jump from place to place over the colony.
+- **Ship shields.** A ship below 60 % health raises a shield in a bubble for 90 seconds, at most once every
+  90 seconds.
+- **City shields.** When you or your escort hit one of its cities, the planet's command raises a dome over that city
+  for 2 minutes, and not again until 90 seconds after those. The dome is a shell of the game's shield clouds that
+  stands on the city's walls. It guards the city hall, its buildings and its turrets, holds five sixths of what the
+  city's buildings could take together (the city hall's health times their number), and cracks and breaks in the
+  same stages.
+  - **Weapons stop at the dome.** Shots from outside burst on it and beams end at its surface; what they would have
+    done is taken from the dome. The colony's own fire passes through.
+  - **A domed city is not captured.** Hits on the dome do not fill the planet's capture bar.
+  - **Its turrets answer at once.** Every idle turret of the city turns on whoever hits the dome.
 
 ### Glow Generator
 
@@ -227,18 +306,22 @@ orbit.
 
 **Alien generators.** Scientist, Shaman and Bard empires keep generators on 60 % of their colonies, some in colours of
 their own. The choice is fixed for each colony. An alien generator belongs to the colony's owner: it wears the owner's
-colour on the planet, on its rollover and on the minimap, and an attack on it angers the owner as an attack on the colony
-does.
+colour on the planet, on its rollover and on the minimap, and an attack on it angers the owner as an attack on the
+colony does.
 
 ### Travel and escort safety
 
 - **Double-click travel.** Double-click a star in the galaxy or a planet in a star system. The ship flies there, and on
   arrival the camera zooms in by itself, with no mouse wheel needed.
 - **Quick exit.** **Shift + Space**, or **Shift + mouse wheel out**:
-  - on a planet, the ship climbs straight out to the star system;
+  - on a planet, the ship climbs straight out to the star system, gathering up to twice its usual speed over the
+    first 1.2 seconds;
   - in a star system, the view zooms out to the galaxy.
 
   Each quick exit costs 5 % of the ship's maximum energy, with a 1.5-second cooldown.
+  - **The rush.** While a quick exit lasts, streaks of cold light fly out past the edges of the screen at a steady
+    pace, and a warp sound holds for as long as they do. Asking again within about a second (another press, or the
+    wheel still turning) carries the same rush on through the next leg of the flight.
 - **Your weapons no longer lock on or fire at your escort.**
 - **The area repair skips ships that have left your escort.** Such a ship stays near you as its empire's defender. It
   is no longer healed, so its thanks no longer fill the radio.
@@ -328,25 +411,28 @@ and the load order decides which list wins.
 The DLL is loaded by the Spore ModAPI Launcher Kit, but contains no Spore ModAPI code. It finds `SporeModAPI.dll`,
 registers a post-init callback, and starts once the game is up.
 
-- **The map of the game.** Every address the mod uses is listed in one map (`src/game/map`), 193 entries in all.
-  127 of them carry the bytes expected there, and those bytes are checked at start-up or when the hook is placed.
-- **Hooks.** The mod places 42 hooks: 24 virtual-table slots and 18 code detours (Microsoft Detours). It also makes
-  three byte-level changes:
+- **The map of the game.** Every address the mod uses is listed in one map (`src/game/map`), 233 entries in all.
+  159 of them carry the bytes expected there, and those bytes are checked at start-up or when the hook is placed.
+- **Hooks.** The mod places 52 hooks: 26 virtual-table slots and 26 code detours (Microsoft Detours). It also makes
+  four byte-level changes:
   - one 4-byte jump patch and one behaviour-record swap let the escort's rose take the mod's targets;
+  - one decision of the ships' behaviour tree is swapped for the mod's, so that ships called in from another empire
+    stay to fight;
   - one redirected call gives a tool object's rollover its owner's colour.
 - **Features.** Each feature is a module run once per frame in a fixed order, after the space game mode's own update.
 
 | Game system | Hooks |
 | --- | --- |
 | Space game mode | Update, Exit and MouseDown slots; the system and planet cameras' mouse wheel |
-| Ship | Combatant TakeDamage, AddHostileUnit, IsInRange and SetTarget slots; the set-target-in-range-band call of the behaviour trees |
+| Ship | Combatant TakeDamage, AddHostileUnit, IsInRange and SetTarget slots; the set-target-in-range-band call of the behaviour trees; the top speed and the acceleration; the check whether one ship is hostile to another; the search for the nearest enemy ship |
 | Space simulation | The space game simulator's Update; the player ship record's Write and Read |
-| Tools | The tool target check; FireTool; the place-object tool's Update; the area repair's and the Rally Call's WhileFiring; a placed tool object's minimap mark and model view; the tool object rollover's colour (a redirected call) |
-| Combat and flow | Base combatant TakeDamage; leaving the planet; the player ship destroyed; the reinforcement call |
+| Tools | The tool target check; FireTool; the place-object tool's Update; the area repair's and the Rally Call's WhileFiring; a placed tool object's minimap mark and model view; the tool object rollover's colour (a redirected call); the launch of a tool's projectile; a beam's view Update |
+| Combat and flow | The missile turret's WhileFiring and the defence missile's launch; base combatant TakeDamage; leaving the planet; the player ship destroyed; a city's capture |
 | Civilization | Relationship apply; vehicle AddOrder and AddOrderAt; vehicle combatant slots; city vehicle spawn; belief projectile update and launch; the voice queue |
 | Tribe | Spear projectile update; the panic and cower behaviour ticks |
 | Planet rendering | Atmosphere colour and the light on models (`cTerrainStateMgr`); the star-system picture bake |
 | Localization | The locale table text lookup |
+| Audio | The seek of a sound's request and the EALayer3 decoder's skip of whole granules, so that a line can be started from its middle |
 | Escort rose | The rose's escort gate (one `je` redirected); the escort's behaviour node 3 gets the mod's copy of its record |
 
 **Escort orders**
@@ -459,10 +545,11 @@ redistributed. So they are not part of this repository, and the `.sporemod` is o
 | `src/space/radio` | The civilization radio |
 | `src/space/tribe` | Tribal defence and spears |
 | `src/space/colony` | Enemy colony turrets |
+| `src/space/shield` | Breakable shields, city domes and the strongest empires' ships |
 | `src/space/glow` | The red sky of war and the atmosphere tint |
 | `src/space/generator` | The Glow Generator: its placement, palette and texts |
 | `src/space/travel`, `src/space/exit` | Double-click travel and the quick exit |
-| `src/space/escort` | The fire guard and the area repair |
+| `src/space/escort` | The fire guard, the area repair and the hunt for a Grox in the escort |
 | `cmake` | The clang++ cross toolchain and the scripts `setup.sh`, `layout.sh`, `imports.sh`, `format.sh` |
 
 ### Formatting and the layout guard

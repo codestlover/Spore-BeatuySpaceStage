@@ -147,22 +147,22 @@ target_compile_options(beatuy_game PRIVATE -Wall)
 target_compile_definitions(beatuy_game PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX UNICODE _UNICODE)
 add_library(BeatuySpaceStage SHARED src/core/Main.cpp src/core/Mod.cpp
   src/space/civilization/Civilization.cpp src/space/civilization/Designs.cpp src/space/civilization/Marker.cpp
-  src/space/civilization/Text.cpp src/space/colony/Colony.cpp src/space/escort/Escort.cpp
+  src/space/civilization/Text.cpp src/space/colony/Colony.cpp src/space/escort/Escort.cpp src/space/escort/Hunt.cpp
   src/space/exit/QuickExit.cpp src/space/generator/Generator.cpp src/space/generator/Picker.cpp
   src/space/glow/Glow.cpp src/space/orders/Behaviour.cpp src/space/orders/Mark.cpp src/space/orders/Orders.cpp
   src/space/orders/Panel.cpp src/space/orders/Reply.cpp src/space/orders/Saving.cpp
-  src/space/radio/Radio.cpp src/space/travel/Travel.cpp src/space/tribe/Tribe.cpp)
+  src/space/radio/Radio.cpp src/space/shield/Shield.cpp src/space/travel/Travel.cpp src/space/tribe/Tribe.cpp)
 target_sources(BeatuySpaceStage PRIVATE FILE_SET CXX_MODULES BASE_DIRS src FILES
   src/core/Feature.cppm src/core/Hooks.cppm src/core/Mod.cppm src/core/Name.cppm
   src/space/civilization/Civilization.cppm src/space/civilization/Designs.cppm src/space/civilization/Marker.cppm
   src/space/civilization/Render.cppm src/space/civilization/Settings.cppm src/space/civilization/Text.cppm
-  src/space/civilization/Unit.cppm src/space/colony/Colony.cppm src/space/escort/Escort.cppm
+  src/space/civilization/Unit.cppm src/space/colony/Colony.cppm src/space/escort/Escort.cppm src/space/escort/Hunt.cppm
   src/space/exit/QuickExit.cppm src/space/generator/Generator.cppm src/space/generator/Picker.cppm
   src/space/generator/Texts.cppm src/space/generator/WindowProcedure.cppm src/space/glow/Color.cppm
   src/space/glow/Glow.cppm src/space/orders/Behaviour.cppm src/space/orders/Book.cppm src/space/orders/Mark.cppm
   src/space/orders/Orders.cppm src/space/orders/Panel.cppm src/space/orders/Reply.cppm src/space/orders/Saving.cppm
-  src/space/orders/Texts.cppm src/space/radio/Radio.cppm src/space/travel/Travel.cppm
-  src/space/tribe/Spear.cppm src/space/tribe/Tribe.cppm src/space/tribe/Village.cppm)
+  src/space/orders/Texts.cppm src/space/radio/Radio.cppm src/space/radio/Recordings.cppm src/space/shield/Shield.cppm
+  src/space/travel/Travel.cppm src/space/tribe/Spear.cppm src/space/tribe/Tribe.cppm src/space/tribe/Village.cppm)
 target_include_directories(BeatuySpaceStage SYSTEM PRIVATE "${DETOURS_SRC}")
 target_compile_options(BeatuySpaceStage PRIVATE -Wall)
 target_compile_definitions(BeatuySpaceStage PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX UNICODE _UNICODE)

@@ -5,6 +5,7 @@
 module;
 #include <algorithm>
 #include <array>
+#include <cstddef>
 #include <cmath>
 #include <cstdint>
 #include <initializer_list>
@@ -14,6 +15,43 @@ module;
 module beatuy.game.world;
 
 namespace game {
+namespace effects {
+struct Transform {
+    uint16_t flags;
+    uint16_t count;
+    std::array<float, 3> position;
+    float scale;
+    std::array<float, 9> rotation;
+};
+static_assert(sizeof(Transform) == 0x38 && offsetof(Transform, scale) == 0x10);
+
+struct Catcher {
+    Transform caught{};
+    bool kept = false;
+
+    virtual int addReference() {
+        return 1;
+    }
+    virtual int release() {
+        return 1;
+    }
+    virtual bool start(int) {
+        return true;
+    }
+    virtual bool stop(int) {
+        return true;
+    }
+    virtual bool running() {
+        return true;
+    }
+    virtual void reserved() {}
+    virtual void setSourceTransform(const Transform* transform) {
+        caught = *transform;
+        kept = true;
+    }
+};
+}
+
 namespace {
 namespace application = map::application;
 namespace space = map::space;
@@ -141,6 +179,41 @@ Empire playerEmpire() {
 Empire empireOf(uint32_t politicalId) {
     char* stars = space::starManager();
     return Empire(stars ? space::empireOf(stars, politicalId) : nullptr);
+}
+
+size_t identityColor(uint32_t politicalId) {
+    static constexpr uint32_t firstIdentifier = 0x053dbcf1;
+    static constexpr std::array<std::array<float, 3>, identityColors> colors{{
+        {0.5f, 0.5f, 0.5f},
+        {0.685f, 0.425f, 0.0f},
+        {0.878f, 0.0f, 1.0f},
+        {0.0f, 1.0f, 0.878f},
+        {0.474f, 0.871f, 0.031f},
+        {0.62f, 0.539f, 1.0f},
+        {1.0f, 0.663f, 0.173f},
+        {1.0f, 1.0f, 0.0f},
+        {1.0f, 0.08f, 0.25f},
+        {0.0f, 0.46f, 1.0f},
+        {0.0f, 0.395f, 0.009f},
+        {0.562f, 0.0f, 0.0f},
+        {0.294f, 0.08f, 0.88f},
+    }};
+    Empire empire = empireOf(politicalId);
+    if (!empire)
+        return 0;
+    uint32_t place = empire.colorIdentifier() - firstIdentifier - 1;
+    if (place < identityColors)
+        return place;
+    std::array<float, 3> shown{};
+    if (!empire.colour(shown))
+        return 0;
+    auto distance = [&shown](const std::array<float, 3>& color) {
+        float sum = 0.0f;
+        for (size_t channel = 0; channel < color.size(); ++channel)
+            sum += (color[channel] - shown[channel]) * (color[channel] - shown[channel]);
+        return sum;
+    };
+    return size_t(std::ranges::min_element(colors, {}, distance) - colors.begin());
 }
 
 std::optional<int> addPlayerMoney(int amount) {
@@ -273,6 +346,12 @@ Projection::ScreenPoint Projection::toScreen(const Vector& cameraPoint) const {
     return {left + (normalizedX * 0.5f + 0.5f) * width, top + (0.5f - normalizedY * 0.5f) * height};
 }
 
+Vector Projection::through(float across, float down) const {
+    float sideways = (across * 2.0f - 1.0f) * windowX + offsetX;
+    float upward = (1.0f - down * 2.0f) * windowY + offsetY;
+    return normalized(right * sideways + forward + up * upward);
+}
+
 std::optional<Projection::ScreenPoint> Projection::project(const Vector& point) const {
     if (!ok)
         return std::nullopt;
@@ -372,9 +451,38 @@ void paintToolView(void* view, std::span<const float, 3> color) {
         field<float>(model, uint32_t(0x4c + channel * 4)) = color[channel];
 }
 
+bool playerSide(void* combatant) {
+    GameData owner = combatant ? Combatant(combatant).owner() : GameData();
+    if (!owner)
+        return false;
+    if (owner.politicalId() == playerPoliticalId())
+        return true;
+    Ship ship(owner.cast(map::identifiers::Type::Ship));
+    return ship && ship.kind() == map::identifiers::ShipKind::Escort;
+}
+
+float* universeValue(uint32_t identifier) {
+    constexpr uint16_t floatKind = 0xd;
+    char* universe = *space::simulatorUniverse;
+    void* list = universe ? field<void*>(universe, 0x10) : nullptr;
+    void* property = nullptr;
+    if (!list || !callVirtual<bool>(list, 0x24, identifier, &property) || !property ||
+        field<uint16_t>(property, 0x12) != floatKind)
+        return nullptr;
+    return application::propertyFloat(property);
+}
+
 float standing(uint32_t who, uint32_t towards) {
     Relationship data = relationData(who, towards);
     return data && std::isfinite(data.standing()) ? data.standing() : 0.0f;
+}
+
+int relationLevel(uint32_t who, uint32_t towards) {
+    void* relationships = civilization::relations();
+    if (!relationships)
+        return neutralRelation;
+    return civilization::relationshipLevel(relationships,
+                                           civilization::relationshipValue(relationships, who, towards, 0));
 }
 
 bool atWar(uint32_t first, uint32_t second) {
@@ -471,6 +579,47 @@ void startTimer(Timer timer) {
     civilization::timerStart(timer.raw());
 }
 
+void stopTimer(Timer timer) {
+    if (timer)
+        space::stopTimer(timer.raw());
+}
+
+int empireLevel(Empire empire) {
+    return empire ? space::empireLevel(empire.raw()) : -1;
+}
+
+void* loadTool(uint32_t identifier) {
+    void* manager = space::toolManager();
+    void* tool = nullptr;
+    const Key key{.instance = identifier, .type = 0, .group = 0};
+    if (manager)
+        space::loadTool(manager, &key, &tool);
+    if (tool)
+        Tool(tool).ready() = true;
+    return tool;
+}
+
+bool fireTool(void* tool, GameData source, GameData target) {
+    void* manager = space::toolManager();
+    if (!manager || !tool || !source || !target)
+        return false;
+    Vector at = target.position();
+    return space::fireTool(manager, tool, source.body().raw(), &at, -1, 0, target.body().raw(), 1);
+}
+
+bool placeEffect(VisualEffect effect, void* spatial, float scale) {
+    if (!effect || !spatial)
+        return false;
+    effects::Catcher catcher;
+    void* pointer = &catcher;
+    application::placeEffectOver(spatial, &pointer);
+    if (!catcher.kept)
+        return false;
+    catcher.caught.scale *= scale;
+    effect.setSourceTransform(&catcher.caught);
+    return true;
+}
+
 void loadSuperweaponTools(Civilization owner) {
     civilization::loadSuperweaponTools(owner.raw());
 }
@@ -502,6 +651,76 @@ void hideEvent(uint32_t event) {
 
 void playAudio(uint32_t identifier) {
     application::playAudio(identifier, application::newAudioTrack());
+}
+
+int newAudioTrack() {
+    return application::newAudioTrack();
+}
+
+void playAudio(uint32_t identifier, int track) {
+    application::playAudio(identifier, track);
+}
+
+void stopAudio(int track) {
+    application::stopAudio(track, 0);
+}
+
+int prepareAudio(uint32_t identifier) {
+    static constexpr std::array<float, 3> origin{};
+    int track = application::newAudioTrack();
+    if (track)
+        application::prepareAudio(identifier, track, origin.data());
+    return track;
+}
+
+void setAudioProperty(int track, map::identifiers::AudioProperty property, float value) {
+    application::setAudioProperty(track, uint32_t(property), value, 0);
+}
+
+void startAudio(int track) {
+    application::startAudio(track);
+}
+
+Window newOverlay(const Rectangle& area) {
+    char* object = userInterface::windowNew(Window::objectByteSize, 4, "UI/Window", userInterface::windowAllocator());
+    if (!object)
+        return Window();
+    userInterface::windowConstructor(object);
+    Window window(object + Window::faceOffset);
+    window.addReference();
+    window.setArea(area);
+    window.setFill(0);
+    window.setFlag(Window::visibleFlag, true);
+    window.setFlag(Window::ignoresMouseFlag, true);
+    return window;
+}
+
+void* loadPicture(const Key& picture) {
+    void* image = nullptr;
+    userInterface::loadImage(&picture, &image, false, -1, -1);
+    return image;
+}
+
+void releasePicture(void* image) {
+    if (image)
+        callVirtual<int>(image, 0x4);
+}
+
+StandardDrawable newPictureLook(void* image) {
+    static constexpr std::array<uint32_t, 3> tables{0x01445238, 0x01445220, 0x014451e0};
+    char* memory = image ? userInterface::windowNew(StandardDrawable::byteSize, 4, "UI/StdDrawable",
+                                                    userInterface::windowAllocator())
+                         : nullptr;
+    char* made = memory ? userInterface::standardDrawableConstructor(memory) : nullptr;
+    auto tableOf = [](const char* object) { return gameAddress(virtualTable(object)); };
+    if (!made || std::array{tableOf(made), tableOf(made + StandardDrawable::layoutElementOffset),
+                            tableOf(made + StandardDrawable::standardOffset)} != tables)
+        return StandardDrawable();
+    StandardDrawable look(made);
+    look.addReference();
+    look.setImage(0, InterfaceImage(image));
+    look.setScale(StandardDrawable::Scale::Stretch);
+    return look;
 }
 }
 

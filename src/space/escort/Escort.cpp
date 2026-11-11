@@ -114,11 +114,31 @@ bool Escort::blocks(void* target) {
     return ship && ship.isEscort();
 }
 
+bool Escort::prepare() {
+    return hunt.prepare();
+}
+
+void Escort::onLeavePlanet(bool) {
+    hunt.stop();
+}
+
+bool Escort::huntsDown(void* ship, void* target) const {
+    return hunt.attacks(ship, target);
+}
+
+void* Escort::huntTarget(void* ship, bool distant, void* found) const {
+    return hunt.targetFor(ship, distant, found);
+}
+
 void Escort::tick() {
     game::Ship playerShip = game::inSpace() ? game::playerShip() : game::Ship();
-    if (!playerShip)
+    if (!playerShip) {
+        hunt.stop();
         return;
+    }
     watch(playerShip);
+    std::array<char*, settings.maximumShips> escort{};
+    hunt.tick(std::span(escort).first(size_t(ships(escort.data(), settings.maximumShips))));
 }
 }
 

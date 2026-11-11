@@ -7,7 +7,6 @@ module;
 #include <algorithm>
 #include <array>
 #include <cmath>
-#include <concepts>
 #include <cstdint>
 #include <optional>
 
@@ -45,16 +44,6 @@ game::Window newWindow(const game::Rectangle& area, uint32_t fill) {
     return window;
 }
 
-template <std::derived_from<game::WindowEffect> Effect> Effect newEffect(const char* name, const auto& constructor) {
-    void* allocator = map::userInterface::windowAllocator();
-    char* memory = map::userInterface::windowNew(Effect::byteSize, game::WindowEffect::alignment, name, allocator);
-    if (!memory)
-        return Effect();
-    Effect effect(constructor(memory));
-    effect.addReference();
-    return effect;
-}
-
 void setUp(game::WindowEffect effect, game::TwoStateEffect::Interpolation interpolation, float damping) {
     const game::TwoStateEffect face = effect.twoState();
     face.setTime(settings.effectSeconds);
@@ -67,13 +56,13 @@ void setUp(game::WindowEffect effect, game::TwoStateEffect::Interpolation interp
 void addEffects(game::Window window) {
     using enum game::TwoStateEffect::Interpolation;
     const game::InflateEffect inflate =
-        newEffect<game::InflateEffect>("UI/InflateEffect", map::userInterface::inflateEffectConstructor);
+        game::newEffect<game::InflateEffect>("UI/InflateEffect", map::userInterface::inflateEffectConstructor);
     if (inflate) {
         setUp(inflate, DampedSpring, settings.springDamping);
         inflate.setScale(settings.growFrom);
     }
     const game::FadeEffect fade =
-        newEffect<game::FadeEffect>("UI/FadeEffect", map::userInterface::fadeEffectConstructor);
+        game::newEffect<game::FadeEffect>("UI/FadeEffect", map::userInterface::fadeEffectConstructor);
     if (fade)
         setUp(fade, Linear, settings.fadeDamping);
     for (const game::WindowEffect effect : std::array<game::WindowEffect, 2>{inflate, fade}) {

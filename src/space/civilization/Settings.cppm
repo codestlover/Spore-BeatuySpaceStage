@@ -76,6 +76,10 @@ struct Settings {
         float velocitySmoothing = 4.0f;
     } super;
 
+    struct Barrage {
+        int inFlight = 3;
+    } barrage;
+
     struct Design {
         int poolSize = 3;
         DWORD pickGapMilliseconds = 3000;
@@ -84,7 +88,8 @@ struct Settings {
     struct Limits {
         int maximumCities = 48, maximumCivilizations = 8, maximumPulled = 96, maximumTurrets = 64, maximumHalls = 64,
             maximumEscorts = 8, maximumHits = 16, maximumBeams = 32, maximumSpared = 64, maximumAsked = 128,
-            maximumStruck = 128, maximumShots = 16, maximumJobs = 32, maximumPicked = 512, maximumRings = 24;
+            maximumStruck = 128, maximumShots = 16, maximumJobs = 32, maximumPicked = 512, maximumRings = 24,
+            maximumMissiles = 32;
     } limits;
 
     struct Rings {

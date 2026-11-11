@@ -538,18 +538,12 @@ void EscortBehaviour::releaseChases() {
 }
 
 void EscortBehaviour::follow(game::Ship ship, game::Ship leader) {
-    char*& field = ship.leader();
     const std::span<uint32_t> listed = std::span(chasing).first(chasingCount);
     const bool chases = leader != game::playerShip();
     chasingCount -= std::ranges::remove(listed, ship.politicalId()).size();
     if (chases && chasingCount < chasing.size())
         chasing[chasingCount++] = ship.politicalId();
-    if (field == leader.raw())
-        return;
-    const game::GameData before(field);
-    leader.addReference();
-    field = leader.raw();
-    before.release();
+    ship.follow(leader);
 }
 
 std::optional<void*> EscortBehaviour::orderedTarget(const OrderBook& book, void* combatant) {

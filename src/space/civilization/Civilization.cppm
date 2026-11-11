@@ -50,6 +50,8 @@ public:
     void beginBelief(char* shell);
     void endBelief();
     const game::Vector* push(void* victim, void* attacker, const game::Vector* direction, game::Vector& out);
+    bool allowMissile(void* tool);
+    void onMissile(void* missile);
 
 private:
     using Unit = civilization::Unit;
@@ -297,6 +299,9 @@ private:
     int pulledCount = 0;
     std::array<game::Turret, limits.maximumTurrets> turrets{};
     int turretCount = 0;
+    std::array<game::GameData, limits.maximumMissiles> missiles{};
+    int missileCount = 0;
+    void forgetMissiles();
     std::array<uint32_t, limits.maximumCivilizations> hunting{};
     int huntCount = 0;
     std::array<game::City, limits.maximumCities> reacting{};

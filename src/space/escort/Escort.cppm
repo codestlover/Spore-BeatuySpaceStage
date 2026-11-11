@@ -9,6 +9,7 @@ module;
 
 export module beatuy.feature.escort;
 
+export import :hunt;
 import beatuy.game;
 
 namespace feature {
@@ -24,6 +25,10 @@ public:
     void maskFormer();
     void unmask();
     void tick();
+    bool prepare();
+    void onLeavePlanet(bool destroyed);
+    [[nodiscard]] bool huntsDown(void* ship, void* target) const;
+    [[nodiscard]] void* huntTarget(void* ship, bool distant, void* found) const;
 
 private:
     struct Masked {
@@ -40,6 +45,7 @@ private:
     int escortIdentifierCount = 0, formerCount = 0;
     std::array<Masked, settings.maximumShips> masked{};
     int maskedCount = 0;
+    Hunt hunt;
 };
 }
 

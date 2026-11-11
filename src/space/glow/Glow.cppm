@@ -15,7 +15,6 @@ export class Glow {
 public:
     void tick();
     void onLeavePlanet(bool destroyed);
-    void onSquad();
     void onAtmosphere(char* state, float altitude);
     void onLighting(char* state, float* model);
     void beginBake();
@@ -29,8 +28,7 @@ private:
     struct Defense {
         DWORD nextProbe = 0;
         bool bar = false, calledOnce = false, secondPending = false;
-        DWORD calledTick = 0, secondDue = 0, squadTick = 0;
-        game::Planet squadPlanet;
+        DWORD calledTick = 0, secondDue = 0;
     };
     struct Bakes {
         int depth = 0;

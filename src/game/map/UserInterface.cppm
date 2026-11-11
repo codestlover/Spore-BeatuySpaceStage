@@ -23,12 +23,17 @@ const Function<char*(__thiscall*)(char*, uint32_t)> findEvent{0xdd66a0, "51568bf
 const Function<char* (*)()> layoutManager{0x80ff80, "a15ccf6401c3"};
 const Function<char*(__thiscall*)(char*, uint32_t)> layerWindow{0x8106c0, "518b442408568bf18d4c240c518d5424"};
 const Function<void* (*)()> windowAllocator{0x951220, "a1b4aa6601c3"};
+const Global<char*> rolloverPool{0x1687348};
+const Function<bool(__cdecl*)(const game::Key*, void**, bool, int, int)> loadImage{0x806320,
+                                                                               "83ec248b44242853568b742434c70600"};
+const Function<char*(__thiscall*)(void*, uint32_t*)> rolloverNext{0xb72340, "8bd18b4c240456e8e4feffff8b3183fe"};
 const Function<char*(__cdecl*)(size_t, size_t, const char*, void*)> windowNew{
     0x951230, "8b4424084883c807568b7424144085f6"};
 const Function<char*(__thiscall*)(char*)> windowConstructor{0x962950, "5333db558be9895d0c895d08895d1489"};
 const Function<char*(__thiscall*)(char*)> inflateEffectConstructor{0x97e600, "568bf1e8d856fefff30f100540374501"};
 const Function<char*(__thiscall*)(char*)> fadeEffectConstructor{0x96efc0, "568bf1e8184dffffc70678244401c746"};
 const Function<char*(__thiscall*)(char*)> glideEffectConstructor{0x970010, "568bf1e8c83cffff0f57c0c7466060de"};
+const Function<char*(__thiscall*)(char*)> rotateEffectConstructor{0x980d90, "568bf1e8482ffeff0f57c0f30f100d40"};
 const Function<char*(__thiscall*)(char*)> buttonConstructor{0x966eb0, "5356578bf1e896bafffff30f10054037"};
 const Function<char*(__thiscall*)(char*, const char16_t*, uint32_t, const char16_t*, const float*, int,
                                  const char16_t*, uint32_t)>

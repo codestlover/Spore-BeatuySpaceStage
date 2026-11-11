@@ -16,23 +16,7 @@ import beatuy.game;
 
 namespace feature::mark {
 namespace {
-constexpr uint32_t firstColorIdentifier = 0x053dbcf1;
-constexpr size_t colorCount = 13;
-constexpr std::array<std::array<float, 3>, colorCount> colors{{
-    {0.5f, 0.5f, 0.5f},
-    {0.685f, 0.425f, 0.0f},
-    {0.878f, 0.0f, 1.0f},
-    {0.0f, 1.0f, 0.878f},
-    {0.474f, 0.871f, 0.031f},
-    {0.62f, 0.539f, 1.0f},
-    {1.0f, 0.663f, 0.173f},
-    {1.0f, 1.0f, 0.0f},
-    {1.0f, 0.08f, 0.25f},
-    {0.0f, 0.46f, 1.0f},
-    {0.0f, 0.395f, 0.009f},
-    {0.562f, 0.0f, 0.0f},
-    {0.294f, 0.08f, 0.88f},
-}};
+constexpr size_t colorCount = game::identityColors;
 constexpr std::array<uint32_t, colorCount + 1> effects{0x6615c708, 0x6615c70b, 0x6615c70a, 0x6615c70d, 0x6615c70c,
                                                        0x6615c70f, 0x6615c70e, 0x6615c701, 0x6615c700, 0x6515c596,
                                                        0x6515c597, 0x6515c594, 0x6515c595, 0x696e4bd4};
@@ -75,26 +59,6 @@ struct TransformCatcher {
     }
 };
 
-namespace {
-size_t colorOf(uint32_t politicalId) {
-    const game::Empire empire = game::empireOf(politicalId);
-    if (!empire)
-        return 0;
-    const uint32_t place = empire.colorIdentifier() - firstColorIdentifier - 1;
-    if (place < colorCount)
-        return place;
-    std::array<float, 3> shown{};
-    if (!empire.colour(shown))
-        return 0;
-    const auto distance = [&shown](const std::array<float, 3>& color) {
-        float sum = 0.0f;
-        for (size_t channel = 0; channel < color.size(); ++channel)
-            sum += (color[channel] - shown[channel]) * (color[channel] - shown[channel]);
-        return sum;
-    };
-    return size_t(std::ranges::min_element(colors, {}, distance) - colors.begin());
-}
-}
 }
 
 namespace feature {
@@ -119,7 +83,7 @@ void AttackMarks::end() {
             continue;
         const auto before = asked.first(size_t(&request - asked.data()));
         const float scale = mark::firstScale + mark::scaleStep * float(std::ranges::count_if(before, sharing));
-        place(request.politicalId, std::array{mark::colorOf(request.politicalId), mark::white}[size_t(crowded)],
+        place(request.politicalId, std::array{game::identityColor(request.politicalId), mark::white}[size_t(crowded)],
               request.spatial, scale);
     }
     const auto hidden = std::ranges::remove_if(std::span(marks).first(count), [](const Mark& mark) {

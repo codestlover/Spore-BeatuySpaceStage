@@ -10,6 +10,7 @@ export module beatuy.game.objects:ship;
 import :combat;
 import :gamedata;
 import :view;
+import beatuy.game.map;
 import beatuy.game.math;
 import beatuy.game.memory;
 
@@ -18,7 +19,7 @@ class Ship : public GameData {
 public:
     using GameData::GameData;
     static constexpr uint32_t fighterOffset = 0x508;
-    static constexpr uint32_t warOnPlanetFlag = 0x1000;
+    static constexpr uint32_t warOnPlanetFlag = 0x1000, standDownOrder = 0x10;
     static Ship ofFighter(const void* combatant) {
         return Ship(combatant ? static_cast<const char*>(combatant) - fighterOffset : nullptr);
     }
@@ -29,11 +30,27 @@ public:
         char* tree = at<char*>(0x6c8);
         return tree ? field<uint32_t>(tree, 0x5fc) : 0;
     }
+    bool underOrder(uint32_t order) const {
+        char* tree = at<char*>(0x6c8);
+        return tree && map::space::activeOrder(tree + 8, order, 0);
+    }
     char*& leader() const {
         return at<char*>(0x68c);
     }
+    void follow(Ship guide) const {
+        char*& led = leader();
+        if (led == guide.raw())
+            return;
+        GameData before(led);
+        guide.addReference();
+        led = guide.raw();
+        before.release();
+    }
     char* aiTarget() const {
         return at<char*>(0x7ac);
+    }
+    char*& homeStar() const {
+        return at<char*>(0x7b0);
     }
     float& flightRadius() const {
         return at<float>(0x768);
@@ -43,6 +60,9 @@ public:
     }
     float& accelerationFactor() const {
         return at<float>(0x6b8);
+    }
+    Vector& velocity() const {
+        return at<Vector>(0x724);
     }
     char*& lastShipAttacker() const {
         return at<char*>(0x710);
@@ -65,6 +85,9 @@ public:
     char*& currentWeapon() const {
         return at<char*>(0x790);
     }
+    char* shieldTimer() const {
+        return object ? object + 0x6d0 : nullptr;
+    }
     char*& groundWeapon() const {
         return at<char*>(0x794);
     }
@@ -73,6 +96,9 @@ public:
     }
     bool withdrawn() const {
         return (at<uint32_t>(0x7dc) & 2u) != 0;
+    }
+    bool canFight() const {
+        return object && alive() && !withdrawn() && fighter().health() > 0.0f;
     }
     float& energy() const {
         return at<float>(0x7f4);

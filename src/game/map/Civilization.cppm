@@ -18,6 +18,11 @@ const Function<void*(__thiscall*)(void*, uint32_t, uint32_t)> relationshipMap{
     0xd01af0, "56578d4424108bf1508d4c241051e85d"};
 const Function<float*(__thiscall*)(void*, void*, uint32_t, uint32_t)> relationshipData{
     0xd01570, "83ec0856578d44241c508d4c241c5133"};
+const Function<float(__thiscall*)(void*, uint32_t, uint32_t, int)> relationshipValue{
+    0xd00950, "83ec108b44241c8b542418508b442418"};
+const Function<int(__thiscall*)(void*, float)> relationshipLevel{0xd008e0, "f30f104914f30f104424040f2fc17612"};
+Hooked<void (*)(void*, void*, void*, uint32_t, float, uint32_t, void*)> cityCapture{
+    0xbe9c70, "53558b6c241456578b7c241885ff7410"};
 const Function<bool(__thiscall*)(void*, uint32_t, uint32_t)> isAtWar{
     0xd01f60, "8b442408568bf18b4c2408505150518b"};
 const Function<bool(__thiscall*)(void*, uint32_t, uint32_t)> isAllied{

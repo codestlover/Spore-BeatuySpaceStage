@@ -43,7 +43,7 @@ const Function<float(__thiscall*)(char*, float)> changeEnergy{0xc38b50, "0f57c08
 
 Hooked<void(__thiscall*)(void*, int)> leavePlanet{0xfde3d0, "83ec588b815c0100008348500153558b"};
 Hooked<void(__thiscall*)(void*)> playerShipDestroyed{0xc3c680, "81ec9c000000535556578bd9e86f0df0"};
-Hooked<void (*)()> callReinforcements{0xff8980, "83ec40535657e8658702008bf88bcf89"};
+const Function<void (*)()> callReinforcements{0xff8980, "83ec40535657e8658702008bf88bcf89"};
 
 Hooked<TakeDamageFunction> combatantTakeDamage{0xbfcf10, "83ec48538b5c246055568bf1578b7e28"};
 Slot<TakeDamageFunction> shipTakeDamage{0x146bb48, 0x18, 0xc3cec0};
@@ -58,7 +58,12 @@ const Function<BehaviourTickFunction> roseTick{0xdbfa60, "83ec4053568b742460578b
 const Location roseEscortGate{0xdbfbb8, "0f8447020000e83dc123008bc8e806c6"};
 const Global<void*> escortRoseBehaviour{0x159e880, "70d65901"};
 const Global<void*> roseBehaviour{0x159d670, "6c25870550f9db0060fadb00c0eedb00"};
-const Function<bool(__cdecl*)(void*, void*, bool)> shipHostile{0x102aa60, "51578b7c240c85ff74128b078b502c8b"};
+Hooked<bool(__cdecl*)(void*, void*, bool)> shipHostile{0x102aa60, "51578b7c240c85ff74128b078b502c8b"};
+Hooked<void*(__cdecl*)(void*, bool, bool)> nearestHostileShip{0x102bca0, "83ec148b0d18755b010f57c0f30f1144"};
+const Global<char*> simulatorUniverse{0x16dc798};
+using DecisionFunction = float(__cdecl*)(void*, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, void*, void*);
+Global<void*> reinforcementLeavesDecision{0x159edf0, "00eedb00"};
+const Function<void*(__thiscall*)(void*, uint32_t, uint32_t)> activeOrder{0xbc9810, "8b81c00100008b91c4010000538b5c24"};
 
 Slot<ModeUpdateFunction> spaceGameUpdate{0x1495454, 0x10, 0x100d140};
 
@@ -71,6 +76,21 @@ Hooked<bool(__thiscall*)(void*, void*, void*, const game::Vector*, int, int, voi
     0x1050080, "83ec0c5355568b74241c8b8678010000"};
 Slot<int(__thiscall*)(void*, void*, const void*, int)> repairAreaFire{0x149ba98, 0x34, 0x1057ff0};
 Slot<int(__thiscall*)(void*, void*, const void*, int)> rallyCallFire{0x149bae0, 0x34, 0x105bf80};
+Slot<int(__thiscall*)(void*, void*, const void*, int)> missileFire{0x149b630, 0x34, 0x10571e0};
+Slot<int(__thiscall*)(void*, int, int)> beamViewUpdate{0x1476750, 0x4, 0xcc43f0};
+const Function<void*(*)()> toolManager{0xb3d490, "a108eb6701c3"};
+const Function<void(__thiscall*)(void*, const game::Key*, void**)> loadTool{0x104e350, "515657c744240800000000e8"};
+const Function<void(__thiscall*)(void*)> stopTimer{0xbc3280, "568bf1807e180074158b461cffd02b46"};
+const Function<int(__thiscall*)(void*)> empireLevel{0xc31900, "83ec08568bf183bed8000000000f8dcf"};
+Hooked<void(__thiscall*)(void*, const void*, void*)> missileLaunch{0xcb88b0, "5355568bf18b9ee4050000578b7c2418"};
+Hooked<void (*)(void*, void*, const game::Vector*, const game::Vector*)> launchProjectile{
+    0x1054390, "83ec4c5355568b74245c578bcee82e27"};
+const Function<void(__thiscall*)(void*, float, void*, const game::Vector*)> homeProjectile{
+    0xcc09f0, "83ec24535556578b7c243c33ed8bf189"};
+const Function<void(__thiscall*)(void*, const game::Vector*)> shipSnapTo{
+    0xc3dc40, "568bf1e8e8323e0085c07545578b7c24"};
+Hooked<float(__thiscall*)(void*)> shipTopSpeed{0xc389a0, "51568bf18b861407000083f8047749ff"};
+Hooked<float(__thiscall*)(void*)> shipAcceleration{0xc38a60, "51568bf183be1407000000578b3d68df"};
 
 const Noun ships{0x18ebadc, 0xad4830};
 }

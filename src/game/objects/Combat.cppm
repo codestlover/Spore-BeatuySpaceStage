@@ -31,6 +31,9 @@ public:
     char*& target() const {
         return at<char*>(0x48);
     }
+    bool& invincible() const {
+        return at<bool>(0x80);
+    }
     char*& lastAttacker() const {
         return at<char*>(0x28);
     }
@@ -58,6 +61,28 @@ public:
     }
 };
 
+class Guidance : public View {
+public:
+    using View::View;
+    float& speed() const {
+        return at<float>(0x10);
+    }
+    float& turnRate() const {
+        return at<float>(0x14);
+    }
+    uint64_t& flownMilliseconds() const {
+        return at<uint64_t>(0x28);
+    }
+};
+
+class Missile : public GameData {
+public:
+    using GameData::GameData;
+    Guidance guidance() const {
+        return reference<Guidance>(0x500);
+    }
+};
+
 class Tool : public View {
 public:
     using View::View;
@@ -66,6 +91,12 @@ public:
     }
     bool& inUse() const {
         return at<bool>(0x80);
+    }
+    void*& source() const {
+        return at<void*>(0x114);
+    }
+    void*& target() const {
+        return at<void*>(0x118);
     }
     float& rangeMultiplier() const {
         return at<float>(0x148);
@@ -76,11 +107,65 @@ public:
     uint32_t& strategy() const {
         return at<uint32_t>(0x178);
     }
+    float& maximumDamage() const {
+        return at<float>(0x1b8);
+    }
     float& maximumRange() const {
         return at<float>(0x1cc);
     }
+    float& projectileSpeed() const {
+        return at<float>(0x1d8);
+    }
     float range() const {
         return object ? maximumRange() * rangeMultiplier() : 0.0f;
+    }
+};
+
+class Projectile : public GameData {
+public:
+    using GameData::GameData;
+    static constexpr int flying = 0;
+    Tool tool() const {
+        return reference<Tool>(0x518);
+    }
+    int& lowestDamage() const {
+        return at<int>(0x52c);
+    }
+    int& highestDamage() const {
+        return at<int>(0x530);
+    }
+    int& damageKind() const {
+        return at<int>(0x538);
+    }
+    int& stage() const {
+        return at<int>(0x544);
+    }
+    uint64_t& flownMilliseconds() const {
+        return at<uint64_t>(0x550);
+    }
+};
+
+class Beam : public View {
+public:
+    using View::View;
+    static constexpr uint32_t type = 0x24630ce;
+    Tool tool() const {
+        return reference<Tool>(0x134);
+    }
+    Vector*& firstPoint() const {
+        return at<Vector*>(0x1e4);
+    }
+    Vector*& pastLastPoint() const {
+        return at<Vector*>(0x1e8);
+    }
+};
+
+class BeamView : public View {
+public:
+    using View::View;
+    Beam beam() const {
+        void* shown = at<void*>(0xc);
+        return Beam(shown ? callVirtual<char*>(shown, 0xb8, Beam::type) : nullptr);
     }
 };
 }

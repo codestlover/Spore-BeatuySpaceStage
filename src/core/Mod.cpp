@@ -19,13 +19,13 @@ Mod& Mod::get() {
 }
 
 void Mod::tick() {
-    inOrder([](Feature auto& feature) { feature.tick(); }, picker, travel, quickExit, civilization, colony, generator,
-            tribe, escort, orders, glow, radio);
+    inOrder([](Feature auto& feature) { feature.tick(); }, picker, travel, quickExit, civilization, colony, shield,
+            generator, tribe, escort, orders, glow, radio);
 }
 
 void Mod::leavePlanet(bool destroyed) {
-    inOrder([destroyed](LeavesPlanet auto& feature) { feature.onLeavePlanet(destroyed); }, civilization, glow,
-            generator, radio, orders);
+    inOrder([destroyed](LeavesPlanet auto& feature) { feature.onLeavePlanet(destroyed); }, civilization, shield, escort,
+            glow, generator, radio, orders);
     game::markLeaving();
 }
 

@@ -26,10 +26,7 @@ int Colony::aimTurrets(game::Ship ship, uint32_t player) {
         const game::Vector* center = city.place().position();
         return center && game::surfaceDistance(*center, shipPosition) <= settings.reach;
     };
-    auto idle = [](game::Turret turret) {
-        return turret.alive() && turret.cast(map::identifiers::Type::Turret) == turret.raw() &&
-               !turret.fighter().target();
-    };
+    auto idle = [](game::Turret turret) { return turret.active() && !turret.fighter().target(); };
     void* prey = ship.fighter().raw();
     int aimed = 0;
     for (game::City city : cities | std::views::filter(hostile)) {

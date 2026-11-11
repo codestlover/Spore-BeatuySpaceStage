@@ -12,6 +12,7 @@ export import beatuy.feature.generator;
 export import beatuy.feature.glow;
 export import beatuy.feature.orders;
 export import beatuy.feature.radio;
+export import beatuy.feature.shield;
 export import beatuy.feature.travel;
 export import beatuy.feature.tribe;
 
@@ -24,6 +25,7 @@ public:
     feature::QuickExit quickExit;
     feature::Civilization civilization;
     feature::Colony colony;
+    feature::Shield shield;
     feature::Generator generator;
     feature::Tribe tribe;
     feature::Escort escort;

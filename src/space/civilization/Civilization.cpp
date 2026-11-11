@@ -811,6 +811,7 @@ bool Civilization::remembered(const Town& town) const {
 }
 
 void Civilization::releaseAll(bool issue) {
+    forgetMissiles();
     cancelOffer();
     if (!pulledCount && !turretCount && !huntCount && !reactCount && !hitCount && !helpCount && !hostileCount &&
         !observerCount)
@@ -1840,6 +1841,36 @@ bool Civilization::automatic(void* tool, game::Ship ship) const {
     automatic |= ship && ship.fighter().automaticWeapon() == tool;
     auto fires = [tool](game::Ship escort) { return escort.fighter().automaticWeapon() == tool; };
     return automatic || std::ranges::any_of(used(escorts, escortCount), fires);
+}
+
+bool Civilization::allowMissile(void* tool) {
+    void* source = tool ? game::field<void*>(tool, 0x114) : nullptr;
+    void* data = source ? game::callVirtual<void*>(source, 0xb8, uint32_t(Type::GameData)) : nullptr;
+    if (!data)
+        return true;
+    const uint32_t politicalId = game::GameData(data).askPoliticalId();
+    for (int i = missileCount - 1; i >= 0; --i)
+        if (!missiles[i].alive()) {
+            missiles[i].release();
+            missiles[i] = missiles[--missileCount];
+        }
+    const auto flying = std::ranges::count(used(missiles, missileCount), politicalId,
+                                           [](game::GameData missile) { return missile.politicalId(); });
+    return flying < settings.barrage.inFlight;
+}
+
+void Civilization::onMissile(void* missile) {
+    if (!missile || missileCount >= limits.maximumMissiles)
+        return;
+    game::GameData shot(missile);
+    shot.addReference();
+    missiles[missileCount++] = shot;
+}
+
+void Civilization::forgetMissiles() {
+    for (game::GameData missile : used(missiles, missileCount))
+        missile.release();
+    missileCount = 0;
 }
 
 bool Civilization::blockShot(void* tool, void* source, void* target) {

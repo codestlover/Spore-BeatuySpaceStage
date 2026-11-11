@@ -144,6 +144,9 @@ public:
     void setFill(uint32_t packedColor) const {
         call<void>(0xac, packedColor);
     }
+    void setShade(uint32_t packedColor) const {
+        call<void>(0x5c, packedColor);
+    }
     void add(Window child) const {
         call<void>(0xd8, child.raw());
     }
@@ -327,6 +330,18 @@ public:
     static constexpr uint32_t byteSize = 0xb8, scaleOffset = 0x60;
     void setScale(float scale) const {
         callVirtual<void>(object + scaleOffset, 0x18, scale);
+    }
+};
+
+class RotateEffect : public WindowEffect {
+public:
+    using WindowEffect::WindowEffect;
+    static constexpr uint32_t byteSize = 0x78, rotationOffset = 0x60;
+    void setAxis(const Vector& axis) const {
+        callVirtual<void>(object + rotationOffset, 0x18, &axis);
+    }
+    void setAngle(float degrees) const {
+        callVirtual<void>(object + rotationOffset, 0x20, degrees);
     }
 };
 

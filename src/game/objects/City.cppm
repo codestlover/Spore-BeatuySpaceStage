@@ -10,6 +10,7 @@ export module beatuy.game.objects:city;
 import :combat;
 import :gamedata;
 import :view;
+import beatuy.game.map;
 import beatuy.game.math;
 import beatuy.game.memory;
 
@@ -72,6 +73,9 @@ public:
     using GameData::GameData;
     Combatant fighter() const {
         return part<Combatant>(0x588);
+    }
+    bool active() const {
+        return alive() && cast(map::identifiers::Type::Turret) == raw();
     }
 };
 

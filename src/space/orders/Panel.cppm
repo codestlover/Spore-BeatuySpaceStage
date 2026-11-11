@@ -175,6 +175,12 @@ private:
         size_t guardedCount = 0;
         float width = 0.0f, height = 0.0f;
         uint32_t revision = 0;
+        struct Pointer {
+            game::Window window;
+            game::StandardDrawable look;
+            void* picture = nullptr;
+        };
+        Pointer pointer;
     };
     struct Session {
         game::AlliesPanel panel;
@@ -210,6 +216,8 @@ private:
     void showRows();
     void layout();
     void placeMenu();
+    void addPointer();
+    void placePointer(const ShipSlot& ship, float menuRight) const;
 
     void openMenu(const OrderBook& book, uint32_t politicalId);
     void openList(const OrderBook& book);

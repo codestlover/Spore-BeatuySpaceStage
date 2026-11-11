@@ -56,6 +56,10 @@ struct Settings {
     uint32_t fadeTable = 0x01442478;
     std::array<float, 2> tooltipOffset{5.0f, -15.0f};
     bool pictures = true;
+    game::Key pointerPicture{.instance = 0x4868ba0a, .type = 0x2f7d0004, .group = 0x011c0bde};
+    float pointerWidth = 36.0f, pointerHeight = 24.0f, pointerGap = 4.0f;
+    float pointerTurn = 180.0f, pointerTurnSeconds = 0.01f;
+    game::Vector pointerAxis{0.0f, 0.0f, 1.0f};
 };
 constexpr Settings settings{};
 
@@ -704,6 +708,39 @@ void OrdersPanel::placeMenu() {
     }
     top = std::round(top);
     menu.window.setArea({right - menu.width, top, right, top + menu.height});
+    placePointer(*found, right);
+}
+
+void OrdersPanel::addPointer() {
+    Menu::Pointer& pointer = session.menu.pointer;
+    pointer.picture = game::loadPicture(drawer::settings.pointerPicture);
+    pointer.look = game::newPictureLook(pointer.picture);
+    pointer.window = pointer.look ? game::newOverlay(game::Rectangle{}) : game::Window();
+    if (!pointer.window)
+        return;
+    pointer.window.setDrawable(pointer.look);
+    game::RotateEffect turn =
+        game::newEffect<game::RotateEffect>("UI/RotateEffect", map::userInterface::rotateEffectConstructor);
+    if (turn) {
+        turn.twoState().setTime(drawer::settings.pointerTurnSeconds);
+        turn.twoState().setTrigger(game::TwoStateEffect::Trigger::Visible);
+        turn.setAxis(drawer::settings.pointerAxis);
+        turn.setAngle(drawer::settings.pointerTurn);
+        pointer.window.addProcedure(turn.raw());
+        turn.release();
+    }
+    session.container.add(pointer.window);
+    session.container.toFront(pointer.window);
+}
+
+void OrdersPanel::placePointer(const ShipSlot& ship, float menuRight) const {
+    const drawer::Settings& settings = drawer::settings;
+    game::Window window = session.menu.pointer.window;
+    if (!window)
+        return;
+    float left = std::round(menuRight + settings.pointerGap);
+    float top = std::round(ship.middle - settings.pointerHeight / 2);
+    window.setArea({left, top, left + settings.pointerWidth, top + settings.pointerHeight});
 }
 
 void OrdersPanel::openMenu(const OrderBook& book, uint32_t politicalId) {
@@ -731,6 +768,7 @@ void OrdersPanel::openMenu(const OrderBook& book, uint32_t politicalId) {
     if (current == Order::ProtectEscort)
         openList(book);
     arrangeMenu();
+    addPointer();
     markRows();
 }
 
@@ -813,6 +851,10 @@ void OrdersPanel::closeMenu() {
     for (const game::Button item : menu.items)
         drawer::discard(item.window());
     drawer::discard(menu.window);
+    drawer::discard(menu.pointer.window);
+    if (menu.pointer.look)
+        menu.pointer.look.release();
+    game::releasePicture(menu.pointer.picture);
     menu = Menu{};
     session.menuOpen = false;
     markRows();

@@ -18,8 +18,7 @@ import beatuy.game;
 namespace glow {
 namespace {
 struct Settings {
-    DWORD probeMilliseconds = 500, squadGraceMilliseconds = 5000, secondSquadMilliseconds = 400,
-          squadCooldownMilliseconds = 60000;
+    DWORD probeMilliseconds = 500, secondSquadMilliseconds = 400, squadCooldownMilliseconds = 60000;
     float fadeSeconds = 2.0f, mostLightChange = 4.0f;
     float tintLightShare = 0.5f, tintLightFloor = 0.6f, tintLightCeiling = 2.0f;
     int maximumSide = 2048;
@@ -91,21 +90,13 @@ bool Glow::wanted() {
     if (owner == uint32_t(-1) || owner == player)
         return false;
     probe();
-    bool squad = defense.squadPlanet && defense.squadPlanet == game::activePlanet() &&
-                 GetTickCount() - defense.squadTick < glow::settings.squadGraceMilliseconds;
-    return defense.bar || squad;
-}
-
-void Glow::onSquad() {
-    defense.squadTick = GetTickCount();
-    defense.squadPlanet = game::activePlanet();
+    return game::relationLevel(owner, player) == game::worstRelation;
 }
 
 void Glow::onLeavePlanet(bool) {
     defense.secondPending = false;
     defense.calledOnce = false;
     war.level = 0.0f;
-    defense.squadPlanet = game::Planet();
     defense.bar = false;
 }
 

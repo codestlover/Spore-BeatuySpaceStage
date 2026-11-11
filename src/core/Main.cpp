@@ -20,8 +20,6 @@ using AddPostInitializationFunction = void (*)(InitializationFunction);
 constexpr wchar_t launcherCore[] = L"SporeModAPI.dll";
 constexpr char addPostInitializationName[] = "?AddPostInitFunction@ModAPI@@YAXP6AXXZ@Z";
 
-void* reinforceOriginal = nullptr;
-
 namespace {
 namespace application = map::application;
 namespace space = map::space;
@@ -41,9 +39,29 @@ bool __fastcall toolTargetHook(void* tool, void*, void* target) {
     return space::toolTargetCheck.callOriginal(tool, target);
 }
 
+int __fastcall beamViewHook(void* view, void*, int time, int elapsed) {
+    if (!game::onPlanet())
+        return space::beamViewUpdate.callOriginal(view, time, elapsed);
+    const feature::Shield::Cut cut = mod().shield.cutBeam(view);
+    const int result = space::beamViewUpdate.callOriginal(view, time, elapsed);
+    feature::Shield::mendBeam(cut);
+    return result;
+}
+
+void __cdecl cityCaptureHook(void* manager, void* city, void* planet, uint32_t owner, float amount, uint32_t attacker,
+                     void* weapon) {
+    if (city && game::onPlanet() && mod().shield.covers(city))
+        return;
+    civilization::cityCapture.callOriginal(manager, city, planet, owner, amount, attacker, weapon);
+}
+
 int __fastcall takeDamageHook(void* combatant, void*, float damage, uint32_t politicalId, int type, const void* at,
                               void* attacker) {
     bool planet = game::onPlanet();
+    if (planet && mod().shield.onDamage(combatant, politicalId, type, damage, attacker)) {
+        mod().civilization.onDamage(combatant, politicalId, attacker, 0.0f, type);
+        return space::combatantTakeDamage.callOriginal(combatant, 0.0f, politicalId, type, at, attacker);
+    }
     if (planet) {
         if (mod().civilization.blockHeal(combatant, politicalId, type))
             return 0;
@@ -76,6 +94,7 @@ void __fastcall exitHook(void* mode, void*) {
         mod().leavePlanet(false);
     mod().picker.close();
     mod().orders.close();
+    mod().quickExit.close();
     space::modeExit.callOriginal(mode);
 }
 
@@ -133,6 +152,16 @@ int __fastcall vehicleDamageHook(void* combatant, void*, float damage, uint32_t 
     int result = civilization::vehicleTakeDamage.callOriginal(combatant, damage, politicalId, type, at, attacker);
     mod().radio.speaker = outer;
     return result;
+}
+
+void __fastcall applySeekHook(void* player, void*, uint32_t request, const void* table, int sample) {
+    application::applySeek.callOriginal(player, request, feature::Radio::seekTable(player, request, table, sample),
+                                        sample);
+}
+
+void __fastcall skipGranulesHook(char* decoder, void*) {
+    if (!feature::Radio::decodesThrough(decoder))
+        application::skipGranules.callOriginal(decoder);
 }
 
 void __fastcall voiceQueueHook(void* queue, void*, uint32_t voice) {
@@ -203,8 +232,11 @@ bool __fastcall shipInRangeHook(void* combatant, void*, void* other) {
 int __fastcall shipDamageHook(void* combatant, void*, float damage, uint32_t politicalId, int type, const void* at,
                               void* attacker) {
     game::Vector push;
-    if (game::onPlanet())
+    if (game::onPlanet()) {
         at = mod().civilization.push(combatant, attacker, static_cast<const game::Vector*>(at), push);
+        if (mod().shield.onShipDamage(combatant, type, damage))
+            return 0;
+    }
     return space::shipTakeDamage.callOriginal(combatant, damage, politicalId, type, at, attacker);
 }
 
@@ -325,25 +357,51 @@ bool __fastcall playerShipReadHook(void* serializable, void*, void* stream) {
     return saving::playerShipRead.callOriginal(serializable, stream);
 }
 
+int __fastcall missileFireHook(void* strategy, void*, void* tool, const void* aim, int flag) {
+    if (game::onPlanet() && !mod().shield.launching() && !mod().civilization.allowMissile(tool))
+        return 0;
+    return space::missileFire.callOriginal(strategy, tool, aim, flag);
+}
+
+void __fastcall missileLaunchHook(void* missile, void*, const void* direction, void* target) {
+    space::missileLaunch.callOriginal(missile, direction, target);
+    if (game::onPlanet() && !mod().shield.onMissile(missile))
+        mod().civilization.onMissile(missile);
+}
+
+void __cdecl launchProjectileHook(void* tool, void* projectile, const game::Vector* origin,
+                                  const game::Vector* target) {
+    const bool fooled = game::onPlanet() && mod().shield.onProjectile(tool, projectile, origin);
+    void*& locked = game::Tool(tool).target();
+    void* kept = locked;
+    if (fooled)
+        locked = nullptr;
+    space::launchProjectile.callOriginal(tool, projectile, origin, target);
+    locked = kept;
+}
+
+float __fastcall shipTopSpeedHook(void* ship, void*) {
+    return space::shipTopSpeed.callOriginal(ship) * mod().shield.speedOf(ship) * mod().quickExit.speedOf(ship);
+}
+
+bool __cdecl shipHostileHook(void* target, void* ship, bool war) {
+    return (game::onPlanet() && mod().escort.huntsDown(ship, target)) ||
+           space::shipHostile.callOriginal(target, ship, war);
+}
+
+void* __cdecl nearestHostileHook(void* ship, bool war, bool distant) {
+    void* found = space::nearestHostileShip.callOriginal(ship, war, distant);
+    return game::onPlanet() ? mod().escort.huntTarget(ship, distant, found) : found;
+}
+
+float __fastcall shipAccelerationHook(void* ship, void*) {
+    return space::shipAcceleration.callOriginal(ship) * mod().shield.accelerationOf(ship);
+}
+
 int __fastcall rallyCallHook(void* strategy, void*, void* tool, const void* aim, int flag) {
     const int result = space::rallyCallFire.callOriginal(strategy, tool, aim, flag);
     mod().orders.onRallyCall();
     return result;
-}
-
-void __cdecl onReinforce() {
-    mod().glow.onSquad();
-}
-
-__declspec(naked) void reinforceHook() {
-    __asm {
-        pushad
-        pushfd
-        call onReinforce
-        popfd
-        popad
-        jmp dword ptr [reinforceOriginal]
-    }
 }
 
 bool __fastcall mouseDownHook(void* mode, void*, int button, float x, float y, int state) {
@@ -376,6 +434,13 @@ int installAll() {
         install(saving::playerShipRead, &playerShipReadHook),
         install(space::repairAreaFire, &repairFireHook),
         install(space::rallyCallFire, &rallyCallHook),
+        install(space::missileFire, &missileFireHook),
+        install(space::missileLaunch, &missileLaunchHook),
+        install(space::launchProjectile, &launchProjectileHook),
+        install(space::shipTopSpeed, &shipTopSpeedHook),
+        install(space::shipAcceleration, &shipAccelerationHook),
+        install(space::shipHostile, &shipHostileHook),
+        install(space::nearestHostileShip, &nearestHostileHook),
         install(tribe::spearUpdate, &spearUpdateHook),
         install(civilization::vehicleGetWeapon, &getWeaponHook),
         install(civilization::vehicleTakeDamage, &vehicleDamageHook),
@@ -388,9 +453,10 @@ int installAll() {
         redirectRolloverEmpire(),
         install(space::toolTargetCheck, &toolTargetHook),
         install(space::combatantTakeDamage, &takeDamageHook),
+        install(civilization::cityCapture, &cityCaptureHook),
+        install(space::beamViewUpdate, &beamViewHook),
         install(space::leavePlanet, &leavePlanetHook),
         install(space::playerShipDestroyed, &destroyedHook),
-        install(space::callReinforcements, &reinforceHook, &reinforceOriginal),
         install(civilization::applyRelationship, &applyHook),
         install(civilization::addOrder, &addOrderHook),
         install(civilization::addOrderAt, &addOrderAtHook),
@@ -398,6 +464,8 @@ int installAll() {
         install(civilization::spawnVehicle, &spawnVehicleHook),
         install(civilization::beliefLaunch, &launchHook),
         install(civilization::voiceQueue, &voiceQueueHook),
+        install(application::applySeek, &applySeekHook),
+        install(application::skipGranules, &skipGranulesHook),
         install(tribe::panicTick, &panicTickHook),
         install(tribe::cowerTick, &cowerTickHook),
         install(planet::atmosphereColor, &atmosphereHook),
@@ -411,8 +479,10 @@ int installAll() {
 void initialize() {
     game::base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
     bool known = map::hostMatches() && map::verify();
-    if (known)
+    if (known) {
         mod().orders.prepare();
+        mod().escort.prepare();
+    }
     int failed = known ? installAll() : 0;
     if (known && !failed)
         return;

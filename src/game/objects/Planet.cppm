@@ -80,8 +80,28 @@ public:
 class StarRecord : public View {
 public:
     using View::View;
+    Vector& position() const {
+        return at<Vector>(0x3c);
+    }
     uint32_t& politicalId() const {
         return at<uint32_t>(0x54);
+    }
+};
+
+class StarCell : public View {
+public:
+    using View::View;
+    static constexpr uint32_t byteSize = 0x14;
+    Array<StarRecord*> stars() const {
+        return arrayAt<StarRecord*>(0x0);
+    }
+};
+
+class StarManager : public View {
+public:
+    using View::View;
+    Array<StarCell> cells() const {
+        return arrayAt<StarCell>(0xc8);
     }
 };
 

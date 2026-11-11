@@ -34,6 +34,13 @@ const Location nounThunkFirst{0xcd7e90}, nounThunkSecond{0xd3d3d0}, nounThunkFou
 
 const Function<void (*)(uint32_t, int)> playAudio{0x436390, "558bec51e8d7a25e008945fc837dfc00"};
 const Function<int (*)()> newAudioTrack{0x436350, "558bec83ec08e815a35e008945fc837d"};
+const Function<void (*)(int, int)> stopAudio{0x572020, "56e84ae64a008bf085f6743e8b068b50"};
+const Function<void (*)(int, uint32_t, float, int)> setAudioProperty{0x436400, "558bec51e867a25e008945fc837dfc00"};
+const Function<void (*)(uint32_t, int, const float*)> prepareAudio{0x657200, "56e86a943c008bf085f674558b068b50"};
+const Function<void (*)(int)> startAudio{0x657270, "56e8fa933c008bf085f6742b8b068b50"};
+Hooked<void(__thiscall*)(void*, uint32_t, const void*, int)> applySeek{0x1137840, "8b4424040fb791c401000083ec205356"};
+Hooked<void(__thiscall*)(char*)> skipGranules{0x1149620, "83ec1453558be98b4d5033db3bcb0f8e"};
+const Function<float*(__thiscall*)(void*)> propertyFloat{0x41ea30, "558bec83ec08894df88b45f80fb74812"};
 
 const Global<void*> device{0x16f89d0};
 const Function<char* (*)()> effectsManager{0x67dd90, "a1e8d85f01c3"};
