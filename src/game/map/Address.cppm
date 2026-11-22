@@ -15,7 +15,9 @@ import beatuy.game.memory;
 export namespace map {
 enum class Kind : uint8_t { Checked, Hooked, Slot };
 
-inline constexpr uint32_t imageSize = 26271744, timestamp = 1727737552;
+// The game's SporeApp_ModAPIFix.exe. Steam's SporeApp.exe is the same link wrapped in SteamStub: the same timestamp,
+// with SteamStub's .bind section on top of the image.
+inline constexpr uint32_t imageSize = 26271744, steamImageSize = 26443776, timestamp = 1727737552;
 
 template <class FunctionPointer>
 concept GameFunction = std::is_pointer_v<FunctionPointer> && std::is_function_v<std::remove_pointer_t<FunctionPointer>>;
@@ -36,6 +38,7 @@ public:
 
 bool verify();
 bool hostMatches();
+uint32_t hostImageSize();
 
 template <GameFunction FunctionPointer> class Function : public Entry {
 public:

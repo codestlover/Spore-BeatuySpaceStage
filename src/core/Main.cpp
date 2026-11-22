@@ -557,7 +557,8 @@ void initialize() {
     using beatuy::join, beatuy::wideName;
     static constexpr auto unsupported =
         join(wideName, L" could not start: this version of Spore is not supported.\n\n", wideName,
-             L" supports only Spore Galactic Adventures with the March 2017 patch (SporeApp_ModAPIFix.exe).");
+             L" supports only Spore Galactic Adventures with the March 2017 patch (SporeApp_ModAPIFix.exe, or Steam's "
+             L"SporeApp.exe).");
     static constexpr auto partly =
         join(wideName, L" started only partly: another mod has already changed some of the same game code.");
     MessageBoxW(nullptr, known ? partly.data() : unsupported.data(), wideName, MB_OK | MB_ICONERROR);

@@ -35,7 +35,7 @@ uintptr_t foreignTarget(const void* code) {
     int32_t offset;
     memcpy(&offset, instruction + 1, sizeof(offset));
     uintptr_t target = reinterpret_cast<uintptr_t>(instruction) + 5 + uintptr_t(offset);
-    if (target >= game::base && target - game::base < map::imageSize)
+    if (target >= game::base && target - game::base < map::hostImageSize())
         return 0;
     return executable(reinterpret_cast<const void*>(target)) ? target : 0;
 }

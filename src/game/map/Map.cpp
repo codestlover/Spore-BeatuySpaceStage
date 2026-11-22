@@ -23,6 +23,11 @@ struct Registry {
     }
 };
 constinit Registry registry;
+
+const IMAGE_NT_HEADERS& hostHeaders() {
+    auto* legacyHeader = reinterpret_cast<const IMAGE_DOS_HEADER*>(game::base);
+    return *reinterpret_cast<const IMAGE_NT_HEADERS*>(game::base + legacyHeader->e_lfanew);
+}
 }
 
 Entry::Entry(uint32_t address, game::Signature signature, Kind kind)
@@ -43,10 +48,14 @@ bool verify() {
 }
 
 bool hostMatches() {
-    auto* legacyHeader = reinterpret_cast<const IMAGE_DOS_HEADER*>(game::base);
-    auto* headers = reinterpret_cast<const IMAGE_NT_HEADERS*>(game::base + legacyHeader->e_lfanew);
-    return headers->FileHeader.Machine == IMAGE_FILE_MACHINE_I386 && headers->OptionalHeader.SizeOfImage == imageSize &&
-           headers->FileHeader.TimeDateStamp == timestamp;
+    const IMAGE_NT_HEADERS& headers = hostHeaders();
+    const uint32_t size = headers.OptionalHeader.SizeOfImage;
+    return headers.FileHeader.Machine == IMAGE_FILE_MACHINE_I386 && (size == imageSize || size == steamImageSize) &&
+           headers.FileHeader.TimeDateStamp == timestamp;
+}
+
+uint32_t hostImageSize() {
+    return hostHeaders().OptionalHeader.SizeOfImage;
 }
 }
 

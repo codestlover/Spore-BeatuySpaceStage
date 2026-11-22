@@ -9,7 +9,7 @@ open fire at once, the sky turns red over any planet at war, and a new colony to
 colour. Everything is built on the game's own systems: its behaviour trees, relation events, voice lines, effects and
 interface art.
 
-Current version: **1.3.1**. Download `BeatuySpaceStage.sporemod` from the [Releases](../../releases) page.
+Current version: **1.3.2**. Download `BeatuySpaceStage.sporemod` from the [Releases](../../releases) page.
 
 ## What it changes
 
@@ -428,7 +428,8 @@ game's own terms: the escort is "allies", refusals reuse the game's own text, an
 **Manual installation.** Copy the two separate release files by hand. They are identical to the ones inside the
 installer:
 - `BeatuySpaceStage.dll` into `Spore ModAPI Launcher Kit/mLibs/`;
-- `BeatuySpaceStage.package` into `SPORE Galactic Adventures/Data/`.
+- `BeatuySpaceStage.package` into `SPORE Galactic Adventures/Data/` (in Steam's copy, into `DataEP1/` in the game's
+  folder).
 
 **Removing the mod.** Use **Spore ModAPI Easy Uninstaller → Beatuy!SpaceStage**, or delete both files.
 - A game without the mod skips the saved escort orders and loads the save normally.
@@ -438,8 +439,11 @@ installer:
 ## Compatibility
 
 **The game build.** The mod checks the game before it changes anything.
-- It runs only on the game's `SporeApp_ModAPIFix.exe` dated 30 September 2024 (PE timestamp `1727737552`, image
-  size 26,271,744 bytes). That executable carries the Galactic Adventures "march2017" code, which the Launcher starts.
+- It runs only on two executables of one game build, dated 30 September 2024 (PE timestamp `1727737552`). The build
+  carries the Galactic Adventures "march2017" code, which the Launcher starts.
+  - The game's `SporeApp_ModAPIFix.exe`, image size 26,271,744 bytes.
+  - The `SporeApp.exe` of Steam's copy of the game, image size 26,443,776 bytes. Steam wraps the same build in its own
+    loader (SteamStub), which adds a section to the image and decrypts the game's code when the game starts.
 - It then compares the first bytes of the game functions it calls and of the game data and code it reads or patches
   with the bytes it expects there.
 - It handles the game being loaded at any address. On Windows, address space layout randomization (ASLR) loads the
@@ -608,8 +612,8 @@ next `cmake` run prepares the dependencies again.
 ### Testing and releases
 
 Releases are checked in two ways:
-- the bytes the mod's map of the game expects are checked against the game executable, loaded both at the address
-  it was built for and at other addresses as Windows loads it;
+- the bytes the mod's map of the game expects are checked against the game executables (Steam's with its code
+  decrypted), loaded both at the address they were built for and at other addresses as Windows loads them;
 - the mod is played in the game.
 
 The release notes say which checks each release had.
