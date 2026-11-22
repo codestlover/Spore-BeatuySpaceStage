@@ -9,7 +9,7 @@ open fire at once, the sky turns red over any planet at war, and a new colony to
 colour. Everything is built on the game's own systems: its behaviour trees, relation events, voice lines, effects and
 interface art.
 
-Current version: **1.3.0**. Download `BeatuySpaceStage.sporemod` from the [Releases](../../releases) page.
+Current version: **1.3.1**. Download `BeatuySpaceStage.sporemod` from the [Releases](../../releases) page.
 
 ## What it changes
 
@@ -442,6 +442,12 @@ installer:
   size 26,271,744 bytes). That executable carries the Galactic Adventures "march2017" code, which the Launcher starts.
 - It then compares the first bytes of the game functions it calls and of the game data and code it reads or patches
   with the bytes it expects there.
+- It handles the game being loaded at any address. On Windows, address space layout randomization (ASLR) loads the
+  game at a different address on each start, while Wine keeps it at the address it was built for.
+  - Every game address is taken from where the game actually is.
+  - The loader adjusts the absolute addresses inside the game's code and data to the new place (they are listed in
+    the executable's relocation table). The byte comparison takes that adjustment back out first, so it gives
+    the same answer at any address.
 - Hooks are checked as they are placed. A function must start with the game's own bytes or with another mod's
   detour, and a virtual-table slot must hold the game's function or another mod's code.
 - If the game is a different build, or another mod changed the same places in an unexpected way:
@@ -482,8 +488,13 @@ and the load order decides which list wins.
 The DLL is loaded by the Spore ModAPI Launcher Kit, but contains no Spore ModAPI code. It finds `SporeModAPI.dll`,
 registers a post-init callback, and starts once the game is up.
 
-- **The map of the game.** Every address the mod uses is listed in one map (`src/game/map`), 260 entries in all.
-  185 of them carry the bytes expected there, and those bytes are checked at start-up or when the hook is placed.
+- **The map of the game.** Every address the mod calls, reads or patches is listed in one map (`src/game/map`), 260
+  entries in all. 185 of them carry the bytes expected there, and those bytes are checked at start-up or when the hook
+  is placed. The mod also recognises some of the game's objects by 12 virtual tables, kept next to the code that
+  checks them.
+  - All of these addresses are written as in the executable.
+  - A map address is moved to where the game is loaded before it is used. A virtual table read from an object is
+    moved back to the executable's address before it is compared.
 - **Hooks.** The mod places 61 hooks: 26 virtual-table slots and 35 code detours (Microsoft Detours). It also makes
   four byte-level changes:
   - one 4-byte jump patch and one behaviour-record swap let the escort's rose take the mod's targets;
@@ -596,9 +607,12 @@ next `cmake` run prepares the dependencies again.
 
 ### Testing and releases
 
-Each release is checked in two ways:
-- the bytes the mod's map of the game expects are checked against the game executable;
+Releases are checked in two ways:
+- the bytes the mod's map of the game expects are checked against the game executable, loaded both at the address
+  it was built for and at other addresses as Windows loads it;
 - the mod is played in the game.
+
+The release notes say which checks each release had.
 
 These tools, the package sources and the release scripts work on the game's own code and data, which cannot be
 redistributed. So they are not part of this repository, and the `.sporemod` is only published on the
